@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/eventsdb
+    username: appuser
+    password: apppass
+    driver-class-name: org.mariadb.jdbc.Driver
+  cache:
+    type: caffeine
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+events:
+  registry:
+    - key: payments.in
+      successTable: payments_in_success
+      failureTable: payments_in_failure
+    - key: loans.in
+      successTable: loans_in_success
+      failureTable: loans_in_failure
+    - key: cards.in
+      successTable: cards_in_success
+      failureTable: cards_in_failure
+    - key: accounts.in
+      successTable: accounts_in_success
+      failureTable: accounts_in_failure
+    - key: transfers.in
+      successTable: transfers_in_success
+      failureTable: transfers_in_failure
+    - key: alerts.in
+      successTable: alerts_in_success
+      failureTable: alerts_in_failure
+
+aggregation:
+  cache:
+    daysToKeep: 7
+  buckets:
+    intervalsMinutes: [60, 15]
+  warmup:
+    enabled: true

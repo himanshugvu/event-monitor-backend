@@ -1,0 +1,104 @@
+package com.vibe.events.repo;
+
+import com.vibe.events.util.RowMapperUtil;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class RecordsRepository {
+  private final JdbcClient jdbcClient;
+
+  public RecordsRepository(JdbcClient jdbcClient) {
+    this.jdbcClient = jdbcClient;
+  }
+
+  public List<Map<String, Object>> loadSuccessRows(
+      String successTable,
+      LocalDate day,
+      String traceId,
+      String messageKey,
+      String accountNumber,
+      int offset,
+      int limit) {
+    StringBuilder sql = new StringBuilder("SELECT * FROM ").append(successTable);
+    Map<String, Object> params = new HashMap<>();
+    sql.append(" WHERE day = :day");
+    params.put("day", day);
+
+    if (traceId != null && !traceId.isBlank()) {
+      sql.append(" AND event_trace_id = :traceId");
+      params.put("traceId", traceId);
+    }
+    if (messageKey != null && !messageKey.isBlank()) {
+      sql.append(" AND message_key = :messageKey");
+      params.put("messageKey", messageKey);
+    }
+    if (accountNumber != null && !accountNumber.isBlank()) {
+      sql.append(" AND account_number = :accountNumber");
+      params.put("accountNumber", accountNumber);
+    }
+
+    sql.append(" ORDER BY event_received_timestamp DESC, id DESC LIMIT :limit OFFSET :offset");
+    params.put("limit", limit);
+    params.put("offset", offset);
+
+    return jdbcClient.sql(sql.toString()).params(params).query(RowMapperUtil.dynamicRowMapper()).list();
+  }
+
+  public List<Map<String, Object>> loadFailureRows(
+      String failureTable,
+      LocalDate day,
+      String traceId,
+      String messageKey,
+      String accountNumber,
+      String exceptionType,
+      Boolean retriable,
+      Integer retryAttemptMin,
+      Integer retryAttemptMax,
+      int offset,
+      int limit) {
+    StringBuilder sql = new StringBuilder("SELECT * FROM ").append(failureTable);
+    Map<String, Object> params = new HashMap<>();
+    sql.append(" WHERE day = :day");
+    params.put("day", day);
+
+    if (traceId != null && !traceId.isBlank()) {
+      sql.append(" AND event_trace_id = :traceId");
+      params.put("traceId", traceId);
+    }
+    if (messageKey != null && !messageKey.isBlank()) {
+      sql.append(" AND message_key = :messageKey");
+      params.put("messageKey", messageKey);
+    }
+    if (accountNumber != null && !accountNumber.isBlank()) {
+      sql.append(" AND account_number = :accountNumber");
+      params.put("accountNumber", accountNumber);
+    }
+    if (exceptionType != null && !exceptionType.isBlank()) {
+      sql.append(" AND exception_type = :exceptionType");
+      params.put("exceptionType", exceptionType);
+    }
+    if (retriable != null) {
+      sql.append(" AND retriable = :retriable");
+      params.put("retriable", retriable ? 1 : 0);
+    }
+    if (retryAttemptMin != null) {
+      sql.append(" AND retry_attempt >= :retryAttemptMin");
+      params.put("retryAttemptMin", retryAttemptMin);
+    }
+    if (retryAttemptMax != null) {
+      sql.append(" AND retry_attempt <= :retryAttemptMax");
+      params.put("retryAttemptMax", retryAttemptMax);
+    }
+
+    sql.append(" ORDER BY event_received_timestamp DESC, id DESC LIMIT :limit OFFSET :offset");
+    params.put("limit", limit);
+    params.put("offset", offset);
+
+    return jdbcClient.sql(sql.toString()).params(params).query(RowMapperUtil.dynamicRowMapper()).list();
+  }
+}
