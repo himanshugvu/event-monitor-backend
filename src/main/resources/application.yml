@@ -19,21 +19,33 @@ management:
 events:
   registry:
     - key: payments.in
+      name: PaymentAuthorized
+      category: Commerce / Payments
       successTable: payments_in_success
       failureTable: payments_in_failure
     - key: loans.in
+      name: LoanDisbursed
+      category: Lending / Core
       successTable: loans_in_success
       failureTable: loans_in_failure
     - key: cards.in
+      name: CardActivated
+      category: Cards / Lifecycle
       successTable: cards_in_success
       failureTable: cards_in_failure
     - key: accounts.in
+      name: AccountOpened
+      category: Accounts / Core
       successTable: accounts_in_success
       failureTable: accounts_in_failure
     - key: transfers.in
+      name: TransferCompleted
+      category: Transfers / Payments
       successTable: transfers_in_success
       failureTable: transfers_in_failure
     - key: alerts.in
+      name: AlertTriggered
+      category: Monitoring / Alerts
       successTable: alerts_in_success
       failureTable: alerts_in_failure
 

@@ -129,12 +129,23 @@ public class AggregationService {
     long totalFailure = 0;
     long totalRetriable = 0;
     double weightedLatencySum = 0.0;
+    List<String> successTables = new ArrayList<>();
 
     for (EventDefinition definition : registry.all()) {
       EventStats stats = computeEventStats(day, definition);
+      String name = definition.getName();
+      if (name == null || name.isBlank()) {
+        name = definition.getKey();
+      }
+      String category = definition.getCategory();
+      if (category == null || category.isBlank()) {
+        category = "Uncategorized";
+      }
       eventRows.add(
           new EventBreakdownRow(
               definition.getKey(),
+              name,
+              category,
               stats.total(),
               stats.success(),
               stats.failure(),
@@ -145,10 +156,13 @@ public class AggregationService {
       totalFailure += stats.failure();
       totalRetriable += stats.retriableFailures();
       weightedLatencySum += stats.avgLatencyMs() * stats.success();
+      successTables.add(definition.getSuccessTable());
     }
 
     long total = totalSuccess + totalFailure;
     double avgLatency = totalSuccess > 0 ? weightedLatencySum / totalSuccess : 0.0;
+    Double p95Latency =
+        repository.loadSuccessLatencyPercentileAcrossTables(successTables, day, totalSuccess, 0.95);
     Kpis kpis =
         new Kpis(
             total,
@@ -156,7 +170,8 @@ public class AggregationService {
             totalFailure,
             round2(successRate(totalSuccess, total)),
             totalRetriable,
-            round2(avgLatency));
+            round2(avgLatency),
+            round2(p95Latency == null ? 0.0 : p95Latency));
 
     HomeAggregationResponse response =
         new HomeAggregationResponse(day, LocalDateTime.now(), kpis, eventRows);
@@ -175,7 +190,8 @@ public class AggregationService {
             stats.failure(),
             round2(stats.successRate()),
             stats.retriableFailures(),
-            round2(stats.avgLatencyMs()));
+            round2(stats.avgLatencyMs()),
+            round2(stats.p95LatencyMs()));
     EventSummaryResponse response =
         new EventSummaryResponse(day, eventKey, LocalDateTime.now(), kpis);
     log.info(
@@ -224,13 +240,15 @@ public class AggregationService {
     long failure = failureTotals.failureCount();
     long total = success + failure;
     double avgLatency = successTotals.avgLatencyMs() == null ? 0.0 : successTotals.avgLatencyMs();
+    double p95Latency = successTotals.p95LatencyMs() == null ? 0.0 : successTotals.p95LatencyMs();
     return new EventStats(
         total,
         success,
         failure,
         successRate(success, total),
         failureTotals.retriableCount(),
-        avgLatency);
+        avgLatency,
+        p95Latency);
   }
 
   private List<BucketPoint> buildHourlyBuckets(
@@ -312,5 +330,6 @@ public class AggregationService {
       long failure,
       double successRate,
       long retriableFailures,
-      double avgLatencyMs) {}
+      double avgLatencyMs,
+      double p95LatencyMs) {}
 }

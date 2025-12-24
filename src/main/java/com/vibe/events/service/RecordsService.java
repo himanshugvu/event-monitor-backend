@@ -38,7 +38,9 @@ public class RecordsService {
     List<Map<String, Object>> rows =
         repository.loadSuccessRows(
             table, day, traceId, messageKey, accountNumber, offset, resolvedSize);
-    return new PagedRowsResponse(resolvedPage, resolvedSize, rows);
+    long total =
+        repository.loadSuccessRowCount(table, day, traceId, messageKey, accountNumber);
+    return new PagedRowsResponse(resolvedPage, resolvedSize, total, rows);
   }
 
   public PagedRowsResponse loadFailureRows(
@@ -77,7 +79,18 @@ public class RecordsService {
             retryAttemptMax,
             offset,
             resolvedSize);
-    return new PagedRowsResponse(resolvedPage, resolvedSize, rows);
+    long total =
+        repository.loadFailureRowCount(
+            table,
+            day,
+            traceId,
+            messageKey,
+            accountNumber,
+            exceptionType,
+            retriable,
+            retryAttemptMin,
+            retryAttemptMax);
+    return new PagedRowsResponse(resolvedPage, resolvedSize, total, rows);
   }
 
   private int resolvePage(Integer page) {

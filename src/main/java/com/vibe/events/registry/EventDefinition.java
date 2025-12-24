@@ -2,6 +2,8 @@ package com.vibe.events.registry;
 
 public class EventDefinition {
   private String key;
+  private String name;
+  private String category;
   private String successTable;
   private String failureTable;
 
@@ -11,6 +13,22 @@ public class EventDefinition {
 
   public void setKey(String key) {
     this.key = key;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getCategory() {
+    return category;
+  }
+
+  public void setCategory(String category) {
+    this.category = category;
   }
 
   public String getSuccessTable() {

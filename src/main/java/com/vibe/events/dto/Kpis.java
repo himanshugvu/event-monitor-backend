@@ -6,4 +6,5 @@ public record Kpis(
     long failure,
     double successRate,
     long retriableFailures,
-    double avgLatencyMs) {}
+    double avgLatencyMs,
+    double p95LatencyMs) {}
