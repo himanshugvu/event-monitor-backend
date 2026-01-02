@@ -1,0 +1,24 @@
+aggregation:
+  warmup:
+    enabled: false
+  buckets:
+    intervalsMinutes: [60]
+
+events:
+  registry:
+    - key: payments.in
+      name: PaymentAuthorized
+      category: Commerce / Payments
+      successTable: payments_in_success
+      failureTable: payments_in_failure
+    - key: loans.in
+      name: LoanDisbursed
+      category: Lending / Core
+      successTable: loans_in_success
+      failureTable: loans_in_failure
+spring:
+  datasource:
+    url: jdbc:h2:mem:eventsdb_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
