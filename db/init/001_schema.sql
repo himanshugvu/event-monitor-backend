@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS payments_in_success (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  day DATE NOT NULL,
+  event_date DATE NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS payments_in_success (
 
 CREATE TABLE IF NOT EXISTS payments_in_failure (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  day DATE NOT NULL,
+  event_date DATE NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS payments_in_failure (
 
 CREATE TABLE IF NOT EXISTS loans_in_success (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  day DATE NOT NULL,
+  event_date DATE NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS loans_in_success (
 
 CREATE TABLE IF NOT EXISTS loans_in_failure (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  day DATE NOT NULL,
+  event_date DATE NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
@@ -84,23 +84,23 @@ CREATE TABLE IF NOT EXISTS loans_in_failure (
   retry_attempt INT
 );
 
-CREATE INDEX idx_payments_success_day_received
-  ON payments_in_success (day, event_received_timestamp);
-CREATE INDEX idx_payments_success_day_trace
-  ON payments_in_success (day, event_trace_id);
-CREATE INDEX idx_payments_failure_day_received
-  ON payments_in_failure (day, event_received_timestamp);
-CREATE INDEX idx_payments_failure_day_trace
-  ON payments_in_failure (day, event_trace_id);
+CREATE INDEX idx_payments_success_event_date_received
+  ON payments_in_success (event_date, event_received_timestamp);
+CREATE INDEX idx_payments_success_event_date_trace
+  ON payments_in_success (event_date, event_trace_id);
+CREATE INDEX idx_payments_failure_event_date_received
+  ON payments_in_failure (event_date, event_received_timestamp);
+CREATE INDEX idx_payments_failure_event_date_trace
+  ON payments_in_failure (event_date, event_trace_id);
 
-CREATE INDEX idx_loans_success_day_received
-  ON loans_in_success (day, event_received_timestamp);
-CREATE INDEX idx_loans_success_day_trace
-  ON loans_in_success (day, event_trace_id);
-CREATE INDEX idx_loans_failure_day_received
-  ON loans_in_failure (day, event_received_timestamp);
-CREATE INDEX idx_loans_failure_day_trace
-  ON loans_in_failure (day, event_trace_id);
+CREATE INDEX idx_loans_success_event_date_received
+  ON loans_in_success (event_date, event_received_timestamp);
+CREATE INDEX idx_loans_success_event_date_trace
+  ON loans_in_success (event_date, event_trace_id);
+CREATE INDEX idx_loans_failure_event_date_received
+  ON loans_in_failure (event_date, event_received_timestamp);
+CREATE INDEX idx_loans_failure_event_date_trace
+  ON loans_in_failure (event_date, event_trace_id);
 
 CREATE TABLE IF NOT EXISTS cards_in_success LIKE payments_in_success;
 CREATE TABLE IF NOT EXISTS cards_in_failure LIKE payments_in_failure;

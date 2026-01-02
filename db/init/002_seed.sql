@@ -1,5 +1,5 @@
 INSERT INTO payments_in_success (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -21,13 +21,13 @@ INSERT INTO payments_in_success (
   (CURDATE(), 'trace-pay-002', 'ACC-1002', 'SMB', TIMESTAMP(CURDATE(), '09:15:00'),
    'payments.raw', 1, 101, 'pay-key-2', '{"amount":220}', '{"amount":220,"status":"ok"}',
    TIMESTAMP(CURDATE(), '09:15:06'), 'payments.processed', 2, 201),
-  (DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'trace-pay-003', 'ACC-1003', 'RETAIL',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '11:00:00'),
+  (DATE_SUB(CURDATE(), INTERVAL 1 event_date), 'trace-pay-003', 'ACC-1003', 'RETAIL',
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '11:00:00'),
    'payments.raw', 1, 102, 'pay-key-3', '{"amount":45}', '{"amount":45,"status":"ok"}',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '11:00:04'), 'payments.processed', 2, 202);
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '11:00:04'), 'payments.processed', 2, 202);
 
 INSERT INTO payments_in_failure (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -52,14 +52,14 @@ INSERT INTO payments_in_failure (
    'payments.raw', 1, 103, 'pay-key-4', '{"amount":90}', '{"amount":90}',
    TIMESTAMP(CURDATE(), '10:30:03'), 'payments.processed', 2, 203,
    'IllegalStateException', 'Invalid payment state', 'stack...', 1, 0),
-  (DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'trace-pay-005', 'ACC-1005', 'SMB',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:20:00'),
+  (DATE_SUB(CURDATE(), INTERVAL 1 event_date), 'trace-pay-005', 'ACC-1005', 'SMB',
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '12:20:00'),
    'payments.raw', 1, 104, 'pay-key-5', '{"amount":110}', '{"amount":110}',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:20:05'), 'payments.processed', 2, 204,
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '12:20:05'), 'payments.processed', 2, 204,
    'TimeoutException', 'Downstream timeout', 'stack...', 0, 1);
 
 INSERT INTO loans_in_success (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -78,13 +78,13 @@ INSERT INTO loans_in_success (
   (CURDATE(), 'trace-loan-001', 'ACC-2001', 'RETAIL', TIMESTAMP(CURDATE(), '07:45:00'),
    'loans.raw', 3, 500, 'loan-key-1', '{"loanAmount":10000}', '{"loanAmount":10000,"status":"ok"}',
    TIMESTAMP(CURDATE(), '07:45:08'), 'loans.processed', 4, 600),
-  (DATE_SUB(CURDATE(), INTERVAL 1 DAY), 'trace-loan-002', 'ACC-2002', 'SMB',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '15:10:00'),
+  (DATE_SUB(CURDATE(), INTERVAL 1 event_date), 'trace-loan-002', 'ACC-2002', 'SMB',
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '15:10:00'),
    'loans.raw', 3, 501, 'loan-key-2', '{"loanAmount":4500}', '{"loanAmount":4500,"status":"ok"}',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '15:10:09'), 'loans.processed', 4, 601);
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '15:10:09'), 'loans.processed', 4, 601);
 
 INSERT INTO loans_in_failure (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,

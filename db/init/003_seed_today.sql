@@ -1,5 +1,5 @@
 INSERT INTO payments_in_success (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -26,7 +26,7 @@ INSERT INTO payments_in_success (
    TIMESTAMP(CURDATE(), '10:15:03'), 'payments.processed', 2, 212);
 
 INSERT INTO payments_in_failure (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -53,7 +53,7 @@ INSERT INTO payments_in_failure (
    'TimeoutException', 'Downstream timeout', 'stack...', 1, 0);
 
 INSERT INTO loans_in_success (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -77,7 +77,7 @@ INSERT INTO loans_in_success (
    TIMESTAMP(CURDATE(), '12:10:08'), 'loans.processed', 4, 611);
 
 INSERT INTO loans_in_failure (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -104,7 +104,7 @@ INSERT INTO loans_in_failure (
    'ValidationException', 'Loan data invalid', 'stack...', 0, 1);
 
 INSERT INTO cards_in_success (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -128,7 +128,7 @@ INSERT INTO cards_in_success (
    TIMESTAMP(CURDATE(), '14:40:06'), 'cards.processed', 2, 411);
 
 INSERT INTO cards_in_failure (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -155,7 +155,7 @@ INSERT INTO cards_in_failure (
    'IllegalStateException', 'Card status invalid', 'stack...', 1, 0);
 
 INSERT INTO accounts_in_success (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -179,7 +179,7 @@ INSERT INTO accounts_in_success (
    TIMESTAMP(CURDATE(), '09:50:07'), 'accounts.processed', 5, 811);
 
 INSERT INTO accounts_in_failure (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -206,7 +206,7 @@ INSERT INTO accounts_in_failure (
    'ValidationException', 'Account data missing', 'stack...', 0, 1);
 
 INSERT INTO transfers_in_success (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -230,7 +230,7 @@ INSERT INTO transfers_in_success (
    TIMESTAMP(CURDATE(), '16:20:07'), 'transfers.processed', 6, 1011);
 
 INSERT INTO transfers_in_failure (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -257,7 +257,7 @@ INSERT INTO transfers_in_failure (
    'TimeoutException', 'Transfer timeout', 'stack...', 1, 0);
 
 INSERT INTO alerts_in_success (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,
@@ -281,7 +281,7 @@ INSERT INTO alerts_in_success (
    TIMESTAMP(CURDATE(), '18:15:05'), 'alerts.processed', 7, 1211);
 
 INSERT INTO alerts_in_failure (
-  day,
+  event_date,
   event_trace_id,
   account_number,
   customer_type,

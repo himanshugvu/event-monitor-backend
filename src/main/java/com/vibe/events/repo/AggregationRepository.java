@@ -24,7 +24,7 @@ public class AggregationRepository {
             + "AS avg_latency_ms "
             + "FROM "
             + successTable
-            + " WHERE day = :day";
+            + " WHERE event_date = :day";
     SuccessTotals totals =
         jdbcClient
             .sql(sql)
@@ -46,7 +46,7 @@ public class AggregationRepository {
             + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count "
             + "FROM "
             + failureTable
-            + " WHERE day = :day";
+            + " WHERE event_date = :day";
     return jdbcClient
         .sql(sql)
         .param("day", day)
@@ -64,7 +64,7 @@ public class AggregationRepository {
             + "AS avg_latency_ms "
             + "FROM "
             + successTable
-            + " WHERE day = :day "
+            + " WHERE event_date = :day "
             + "GROUP BY HOUR(event_received_timestamp) "
             + "ORDER BY hour_of_day";
     List<SuccessBucket> buckets =
@@ -93,7 +93,7 @@ public class AggregationRepository {
             + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count "
             + "FROM "
             + failureTable
-            + " WHERE day = :day "
+            + " WHERE event_date = :day "
             + "GROUP BY HOUR(event_received_timestamp) "
             + "ORDER BY hour_of_day";
     List<FailureBucket> buckets =
@@ -125,7 +125,7 @@ public class AggregationRepository {
             + "AS avg_latency_ms "
             + "FROM "
             + successTable
-            + " WHERE day = :day "
+            + " WHERE event_date = :day "
             + "GROUP BY HOUR(event_received_timestamp), FLOOR(MINUTE(event_received_timestamp) / 15) "
             + "ORDER BY hour_of_day, quarter";
     List<SuccessBucket> buckets =
@@ -156,7 +156,7 @@ public class AggregationRepository {
             + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count "
             + "FROM "
             + failureTable
-            + " WHERE day = :day "
+            + " WHERE event_date = :day "
             + "GROUP BY HOUR(event_received_timestamp), FLOOR(MINUTE(event_received_timestamp) / 15) "
             + "ORDER BY hour_of_day, quarter";
     List<FailureBucket> buckets =
@@ -202,7 +202,7 @@ public class AggregationRepository {
     return "SELECT TIMESTAMPDIFF(MICROSECOND, event_received_timestamp, event_sent_timestamp) / 1000 "
         + "AS latency_ms FROM "
         + successTable
-        + " WHERE day = :day";
+        + " WHERE event_date = :day";
   }
 
   private Double loadLatencyPercentile(

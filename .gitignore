@@ -3,6 +3,7 @@ target/
 logs/
 spring.log
 *.log
+tmp_jar/
 
 # Maven
 pom.xml.tag
