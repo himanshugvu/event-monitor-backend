@@ -7,6 +7,8 @@ import com.vibe.events.service.AggregationService;
 import com.vibe.events.service.RecordsService;
 import com.vibe.events.util.DayValidator;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,10 +50,28 @@ public class EventDetailsController {
       @RequestParam(required = false) Integer size,
       @RequestParam(required = false) String traceId,
       @RequestParam(required = false) String messageKey,
-      @RequestParam(required = false) String accountNumber) {
+      @RequestParam(required = false) String accountNumber,
+      @RequestParam(required = false) String fromDate,
+      @RequestParam(required = false) String toDate,
+      @RequestParam(required = false) String fromTime,
+      @RequestParam(required = false) String toTime) {
     LocalDate parsedDay = DayValidator.parseDay(day);
+    LocalDate parsedFrom = fromDate == null ? null : DayValidator.parseDay(fromDate);
+    LocalDate parsedTo = toDate == null ? null : DayValidator.parseDay(toDate);
+    LocalTime parsedFromTime = DayValidator.parseTime(fromTime);
+    LocalTime parsedToTime = DayValidator.parseTime(toTime);
     return recordsService.loadSuccessRows(
-        parsedDay, eventKey, page, size, traceId, messageKey, accountNumber);
+        parsedDay,
+        parsedFrom,
+        parsedTo,
+        parsedFromTime,
+        parsedToTime,
+        eventKey,
+        page,
+        size,
+        traceId,
+        messageKey,
+        accountNumber);
   }
 
   @GetMapping("/failures")
@@ -66,10 +86,22 @@ public class EventDetailsController {
       @RequestParam(required = false) String exceptionType,
       @RequestParam(required = false) Boolean retriable,
       @RequestParam(required = false) Integer retryAttemptMin,
-      @RequestParam(required = false) Integer retryAttemptMax) {
+      @RequestParam(required = false) Integer retryAttemptMax,
+      @RequestParam(required = false) String fromDate,
+      @RequestParam(required = false) String toDate,
+      @RequestParam(required = false) String fromTime,
+      @RequestParam(required = false) String toTime) {
     LocalDate parsedDay = DayValidator.parseDay(day);
+    LocalDate parsedFrom = fromDate == null ? null : DayValidator.parseDay(fromDate);
+    LocalDate parsedTo = toDate == null ? null : DayValidator.parseDay(toDate);
+    LocalTime parsedFromTime = DayValidator.parseTime(fromTime);
+    LocalTime parsedToTime = DayValidator.parseTime(toTime);
     return recordsService.loadFailureRows(
         parsedDay,
+        parsedFrom,
+        parsedTo,
+        parsedFromTime,
+        parsedToTime,
         eventKey,
         page,
         size,
@@ -80,5 +112,22 @@ public class EventDetailsController {
         retriable,
         retryAttemptMin,
         retryAttemptMax);
+  }
+
+  @GetMapping("/exception-types")
+  public List<String> getExceptionTypes(
+      @PathVariable String day,
+      @PathVariable String eventKey,
+      @RequestParam(required = false) String fromDate,
+      @RequestParam(required = false) String toDate,
+      @RequestParam(required = false) String fromTime,
+      @RequestParam(required = false) String toTime) {
+    LocalDate parsedDay = DayValidator.parseDay(day);
+    LocalDate parsedFrom = fromDate == null ? null : DayValidator.parseDay(fromDate);
+    LocalDate parsedTo = toDate == null ? null : DayValidator.parseDay(toDate);
+    LocalTime parsedFromTime = DayValidator.parseTime(fromTime);
+    LocalTime parsedToTime = DayValidator.parseTime(toTime);
+    return recordsService.loadFailureExceptionTypes(
+        parsedDay, parsedFrom, parsedTo, parsedFromTime, parsedToTime, eventKey);
   }
 }

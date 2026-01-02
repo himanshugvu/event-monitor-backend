@@ -2,6 +2,7 @@ package com.vibe.events.repo;
 
 import com.vibe.events.util.RowMapperUtil;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,10 @@ public class RecordsRepository {
 
   public List<Map<String, Object>> loadSuccessRows(
       String successTable,
-      LocalDate day,
+      LocalDate startDay,
+      LocalDate endDay,
+      LocalDateTime startTimestamp,
+      LocalDateTime endTimestamp,
       String traceId,
       String messageKey,
       String accountNumber,
@@ -26,8 +30,12 @@ public class RecordsRepository {
       int limit) {
     StringBuilder sql = new StringBuilder("SELECT * FROM ").append(successTable);
     Map<String, Object> params = new HashMap<>();
-    sql.append(" WHERE day = :day");
-    params.put("day", day);
+    sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
+    params.put("startDay", startDay);
+    params.put("endDay", endDay);
+    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    params.put("startTs", startTimestamp);
+    params.put("endTs", endTimestamp);
 
     if (traceId != null && !traceId.isBlank()) {
       sql.append(" AND event_trace_id = :traceId");
@@ -51,14 +59,21 @@ public class RecordsRepository {
 
   public long loadSuccessRowCount(
       String successTable,
-      LocalDate day,
+      LocalDate startDay,
+      LocalDate endDay,
+      LocalDateTime startTimestamp,
+      LocalDateTime endTimestamp,
       String traceId,
       String messageKey,
       String accountNumber) {
     StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS total_count FROM ").append(successTable);
     Map<String, Object> params = new HashMap<>();
-    sql.append(" WHERE day = :day");
-    params.put("day", day);
+    sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
+    params.put("startDay", startDay);
+    params.put("endDay", endDay);
+    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    params.put("startTs", startTimestamp);
+    params.put("endTs", endTimestamp);
 
     if (traceId != null && !traceId.isBlank()) {
       sql.append(" AND event_trace_id = :traceId");
@@ -82,7 +97,10 @@ public class RecordsRepository {
 
   public List<Map<String, Object>> loadFailureRows(
       String failureTable,
-      LocalDate day,
+      LocalDate startDay,
+      LocalDate endDay,
+      LocalDateTime startTimestamp,
+      LocalDateTime endTimestamp,
       String traceId,
       String messageKey,
       String accountNumber,
@@ -94,8 +112,12 @@ public class RecordsRepository {
       int limit) {
     StringBuilder sql = new StringBuilder("SELECT * FROM ").append(failureTable);
     Map<String, Object> params = new HashMap<>();
-    sql.append(" WHERE day = :day");
-    params.put("day", day);
+    sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
+    params.put("startDay", startDay);
+    params.put("endDay", endDay);
+    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    params.put("startTs", startTimestamp);
+    params.put("endTs", endTimestamp);
 
     if (traceId != null && !traceId.isBlank()) {
       sql.append(" AND event_trace_id = :traceId");
@@ -135,7 +157,10 @@ public class RecordsRepository {
 
   public long loadFailureRowCount(
       String failureTable,
-      LocalDate day,
+      LocalDate startDay,
+      LocalDate endDay,
+      LocalDateTime startTimestamp,
+      LocalDateTime endTimestamp,
       String traceId,
       String messageKey,
       String accountNumber,
@@ -145,8 +170,12 @@ public class RecordsRepository {
       Integer retryAttemptMax) {
     StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS total_count FROM ").append(failureTable);
     Map<String, Object> params = new HashMap<>();
-    sql.append(" WHERE day = :day");
-    params.put("day", day);
+    sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
+    params.put("startDay", startDay);
+    params.put("endDay", endDay);
+    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    params.put("startTs", startTimestamp);
+    params.put("endTs", endTimestamp);
 
     if (traceId != null && !traceId.isBlank()) {
       sql.append(" AND event_trace_id = :traceId");
@@ -182,5 +211,29 @@ public class RecordsRepository {
         .params(params)
         .query((rs, rowNum) -> rs.getLong("total_count"))
         .single();
+  }
+
+  public List<String> loadFailureExceptionTypes(
+      String failureTable,
+      LocalDate startDay,
+      LocalDate endDay,
+      LocalDateTime startTimestamp,
+      LocalDateTime endTimestamp) {
+    StringBuilder sql = new StringBuilder("SELECT DISTINCT exception_type FROM ").append(failureTable);
+    Map<String, Object> params = new HashMap<>();
+    sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
+    params.put("startDay", startDay);
+    params.put("endDay", endDay);
+    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    params.put("startTs", startTimestamp);
+    params.put("endTs", endTimestamp);
+    sql.append(" AND exception_type IS NOT NULL AND exception_type <> ''");
+    sql.append(" ORDER BY exception_type");
+
+    return jdbcClient
+        .sql(sql.toString())
+        .params(params)
+        .query((rs, rowNum) -> rs.getString("exception_type"))
+        .list();
   }
 }

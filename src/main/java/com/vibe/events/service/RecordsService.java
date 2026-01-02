@@ -5,6 +5,8 @@ import com.vibe.events.error.BadRequestException;
 import com.vibe.events.registry.EventRegistry;
 import com.vibe.events.repo.RecordsRepository;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,10 @@ public class RecordsService {
 
   public PagedRowsResponse loadSuccessRows(
       LocalDate day,
+      LocalDate fromDate,
+      LocalDate toDate,
+      LocalTime fromTime,
+      LocalTime toTime,
       String eventKey,
       Integer page,
       Integer size,
@@ -34,17 +40,39 @@ public class RecordsService {
     int resolvedPage = resolvePage(page);
     int offset = resolvedPage * resolvedSize;
     String table = registry.successTable(eventKey);
+    DateTimeRange range = resolveRange(day, fromDate, toDate, fromTime, toTime);
 
     List<Map<String, Object>> rows =
         repository.loadSuccessRows(
-            table, day, traceId, messageKey, accountNumber, offset, resolvedSize);
+            table,
+            range.startDay(),
+            range.endDay(),
+            range.startTimestamp(),
+            range.endTimestamp(),
+            traceId,
+            messageKey,
+            accountNumber,
+            offset,
+            resolvedSize);
     long total =
-        repository.loadSuccessRowCount(table, day, traceId, messageKey, accountNumber);
+        repository.loadSuccessRowCount(
+            table,
+            range.startDay(),
+            range.endDay(),
+            range.startTimestamp(),
+            range.endTimestamp(),
+            traceId,
+            messageKey,
+            accountNumber);
     return new PagedRowsResponse(resolvedPage, resolvedSize, total, rows);
   }
 
   public PagedRowsResponse loadFailureRows(
       LocalDate day,
+      LocalDate fromDate,
+      LocalDate toDate,
+      LocalTime fromTime,
+      LocalTime toTime,
       String eventKey,
       Integer page,
       Integer size,
@@ -59,6 +87,7 @@ public class RecordsService {
     int resolvedPage = resolvePage(page);
     int offset = resolvedPage * resolvedSize;
 
+    DateTimeRange range = resolveRange(day, fromDate, toDate, fromTime, toTime);
     if (retryAttemptMin != null
         && retryAttemptMax != null
         && retryAttemptMin > retryAttemptMax) {
@@ -69,7 +98,10 @@ public class RecordsService {
     List<Map<String, Object>> rows =
         repository.loadFailureRows(
             table,
-            day,
+            range.startDay(),
+            range.endDay(),
+            range.startTimestamp(),
+            range.endTimestamp(),
             traceId,
             messageKey,
             accountNumber,
@@ -82,7 +114,10 @@ public class RecordsService {
     long total =
         repository.loadFailureRowCount(
             table,
-            day,
+            range.startDay(),
+            range.endDay(),
+            range.startTimestamp(),
+            range.endTimestamp(),
             traceId,
             messageKey,
             accountNumber,
@@ -92,6 +127,55 @@ public class RecordsService {
             retryAttemptMax);
     return new PagedRowsResponse(resolvedPage, resolvedSize, total, rows);
   }
+
+  public List<String> loadFailureExceptionTypes(
+      LocalDate day,
+      LocalDate fromDate,
+      LocalDate toDate,
+      LocalTime fromTime,
+      LocalTime toTime,
+      String eventKey) {
+    DateTimeRange range = resolveRange(day, fromDate, toDate, fromTime, toTime);
+    String table = registry.failureTable(eventKey);
+    return repository.loadFailureExceptionTypes(
+        table,
+        range.startDay(),
+        range.endDay(),
+        range.startTimestamp(),
+        range.endTimestamp());
+  }
+
+  private DateTimeRange resolveRange(
+      LocalDate day, LocalDate fromDate, LocalDate toDate, LocalTime fromTime, LocalTime toTime) {
+    LocalDate start = fromDate;
+    LocalDate end = toDate;
+    if (start == null && end == null) {
+      start = day;
+      end = day;
+    } else if (start == null) {
+      start = end;
+    } else if (end == null) {
+      end = start;
+    }
+    if (start.isAfter(end)) {
+      throw new BadRequestException("fromDate must be <= toDate.");
+    }
+
+    LocalTime startTime = fromTime == null ? LocalTime.MIDNIGHT : fromTime;
+    LocalTime endTime = toTime == null ? LocalTime.of(23, 59, 59) : toTime;
+    LocalDateTime startTimestamp = LocalDateTime.of(start, startTime);
+    LocalDateTime endTimestamp = LocalDateTime.of(end, endTime);
+    if (startTimestamp.isAfter(endTimestamp)) {
+      throw new BadRequestException("fromTime must be <= toTime.");
+    }
+    return new DateTimeRange(start, end, startTimestamp, endTimestamp);
+  }
+
+  private record DateTimeRange(
+      LocalDate startDay,
+      LocalDate endDay,
+      LocalDateTime startTimestamp,
+      LocalDateTime endTimestamp) {}
 
   private int resolvePage(Integer page) {
     int resolved = page == null ? 0 : page;
