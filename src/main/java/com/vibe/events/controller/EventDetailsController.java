@@ -28,8 +28,14 @@ public class EventDetailsController {
   }
 
   @GetMapping("/summary")
-  public EventSummaryResponse getSummary(@PathVariable String day, @PathVariable String eventKey) {
+  public EventSummaryResponse getSummary(
+      @PathVariable String day,
+      @PathVariable String eventKey,
+      @RequestParam(defaultValue = "false") boolean refresh) {
     LocalDate parsedDay = DayValidator.parseDay(day);
+    if (refresh) {
+      aggregationService.refreshEventSummary(parsedDay, eventKey);
+    }
     return aggregationService.getEventSummary(parsedDay, eventKey);
   }
 
@@ -37,8 +43,12 @@ public class EventDetailsController {
   public EventBucketsResponse getBuckets(
       @PathVariable String day,
       @PathVariable String eventKey,
-      @RequestParam(defaultValue = "60") int intervalMinutes) {
+      @RequestParam(defaultValue = "60") int intervalMinutes,
+      @RequestParam(defaultValue = "false") boolean refresh) {
     LocalDate parsedDay = DayValidator.parseDay(day);
+    if (refresh) {
+      aggregationService.refreshEventBuckets(parsedDay, eventKey, intervalMinutes);
+    }
     return aggregationService.getEventBuckets(parsedDay, eventKey, intervalMinutes);
   }
 
@@ -51,6 +61,10 @@ public class EventDetailsController {
       @RequestParam(required = false) String traceId,
       @RequestParam(required = false) String messageKey,
       @RequestParam(required = false) String accountNumber,
+      @RequestParam(required = false) Long latencyMin,
+      @RequestParam(required = false) Long latencyMax,
+      @RequestParam(required = false) Long receivedLatencyMin,
+      @RequestParam(required = false) Long receivedLatencyMax,
       @RequestParam(required = false) String fromDate,
       @RequestParam(required = false) String toDate,
       @RequestParam(required = false) String fromTime,
@@ -71,7 +85,11 @@ public class EventDetailsController {
         size,
         traceId,
         messageKey,
-        accountNumber);
+        accountNumber,
+        latencyMin,
+        latencyMax,
+        receivedLatencyMin,
+        receivedLatencyMax);
   }
 
   @GetMapping("/failures")
@@ -83,6 +101,10 @@ public class EventDetailsController {
       @RequestParam(required = false) String traceId,
       @RequestParam(required = false) String messageKey,
       @RequestParam(required = false) String accountNumber,
+      @RequestParam(required = false) Long latencyMin,
+      @RequestParam(required = false) Long latencyMax,
+      @RequestParam(required = false) Long receivedLatencyMin,
+      @RequestParam(required = false) Long receivedLatencyMax,
       @RequestParam(required = false) String exceptionType,
       @RequestParam(required = false) Boolean retriable,
       @RequestParam(required = false) Integer retryAttemptMin,
@@ -108,6 +130,10 @@ public class EventDetailsController {
         traceId,
         messageKey,
         accountNumber,
+        latencyMin,
+        latencyMax,
+        receivedLatencyMin,
+        receivedLatencyMax,
         exceptionType,
         retriable,
         retryAttemptMin,

@@ -1,17 +1,20 @@
 CREATE TABLE IF NOT EXISTS payments_in_success (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   event_date DATE NOT NULL,
+  event_date_time DATETIME NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
-  event_received_timestamp DATETIME,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   source_topic VARCHAR(255),
   source_partition_id INT,
   source_offset BIGINT,
   message_key VARCHAR(255),
   source_payload LONGTEXT,
   transformed_payload LONGTEXT,
-  event_sent_timestamp DATETIME,
+  latency_ms BIGINT NOT NULL DEFAULT 0,
+  latency_event_received_ms BIGINT NOT NULL DEFAULT 0,
+  latency_event_sent_ms BIGINT NOT NULL DEFAULT 0,
   target_topic VARCHAR(255),
   target_partition_id INT,
   target_offset BIGINT
@@ -20,17 +23,19 @@ CREATE TABLE IF NOT EXISTS payments_in_success (
 CREATE TABLE IF NOT EXISTS payments_in_failure (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   event_date DATE NOT NULL,
+  event_date_time DATETIME NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
-  event_received_timestamp DATETIME,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   source_topic VARCHAR(255),
   source_partition_id INT,
   source_offset BIGINT,
   message_key VARCHAR(255),
   source_payload LONGTEXT,
   transformed_payload LONGTEXT,
-  event_sent_timestamp DATETIME,
+  latency_ms BIGINT NOT NULL DEFAULT 0,
+  latency_event_received_ms BIGINT NOT NULL DEFAULT 0,
   target_topic VARCHAR(255),
   target_partition_id INT,
   target_offset BIGINT,
@@ -44,17 +49,20 @@ CREATE TABLE IF NOT EXISTS payments_in_failure (
 CREATE TABLE IF NOT EXISTS loans_in_success (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   event_date DATE NOT NULL,
+  event_date_time DATETIME NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
-  event_received_timestamp DATETIME,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   source_topic VARCHAR(255),
   source_partition_id INT,
   source_offset BIGINT,
   message_key VARCHAR(255),
   source_payload LONGTEXT,
   transformed_payload LONGTEXT,
-  event_sent_timestamp DATETIME,
+  latency_ms BIGINT NOT NULL DEFAULT 0,
+  latency_event_received_ms BIGINT NOT NULL DEFAULT 0,
+  latency_event_sent_ms BIGINT NOT NULL DEFAULT 0,
   target_topic VARCHAR(255),
   target_partition_id INT,
   target_offset BIGINT
@@ -63,17 +71,19 @@ CREATE TABLE IF NOT EXISTS loans_in_success (
 CREATE TABLE IF NOT EXISTS loans_in_failure (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   event_date DATE NOT NULL,
+  event_date_time DATETIME NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
-  event_received_timestamp DATETIME,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   source_topic VARCHAR(255),
   source_partition_id INT,
   source_offset BIGINT,
   message_key VARCHAR(255),
   source_payload LONGTEXT,
   transformed_payload LONGTEXT,
-  event_sent_timestamp DATETIME,
+  latency_ms BIGINT NOT NULL DEFAULT 0,
+  latency_event_received_ms BIGINT NOT NULL DEFAULT 0,
   target_topic VARCHAR(255),
   target_partition_id INT,
   target_offset BIGINT,
@@ -84,21 +94,21 @@ CREATE TABLE IF NOT EXISTS loans_in_failure (
   retry_attempt INT
 );
 
-CREATE INDEX idx_payments_success_event_date_received
-  ON payments_in_success (event_date, event_received_timestamp);
+CREATE INDEX idx_payments_success_event_date_time
+  ON payments_in_success (event_date, event_date_time);
 CREATE INDEX idx_payments_success_event_date_trace
   ON payments_in_success (event_date, event_trace_id);
-CREATE INDEX idx_payments_failure_event_date_received
-  ON payments_in_failure (event_date, event_received_timestamp);
+CREATE INDEX idx_payments_failure_event_date_time
+  ON payments_in_failure (event_date, event_date_time);
 CREATE INDEX idx_payments_failure_event_date_trace
   ON payments_in_failure (event_date, event_trace_id);
 
-CREATE INDEX idx_loans_success_event_date_received
-  ON loans_in_success (event_date, event_received_timestamp);
+CREATE INDEX idx_loans_success_event_date_time
+  ON loans_in_success (event_date, event_date_time);
 CREATE INDEX idx_loans_success_event_date_trace
   ON loans_in_success (event_date, event_trace_id);
-CREATE INDEX idx_loans_failure_event_date_received
-  ON loans_in_failure (event_date, event_received_timestamp);
+CREATE INDEX idx_loans_failure_event_date_time
+  ON loans_in_failure (event_date, event_date_time);
 CREATE INDEX idx_loans_failure_event_date_trace
   ON loans_in_failure (event_date, event_trace_id);
 

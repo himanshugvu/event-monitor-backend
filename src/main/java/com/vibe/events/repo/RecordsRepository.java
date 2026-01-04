@@ -26,6 +26,10 @@ public class RecordsRepository {
       String traceId,
       String messageKey,
       String accountNumber,
+      Long latencyMin,
+      Long latencyMax,
+      Long receivedLatencyMin,
+      Long receivedLatencyMax,
       int offset,
       int limit) {
     StringBuilder sql = new StringBuilder("SELECT * FROM ").append(successTable);
@@ -33,7 +37,7 @@ public class RecordsRepository {
     sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
     params.put("startDay", startDay);
     params.put("endDay", endDay);
-    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    sql.append(" AND event_date_time BETWEEN :startTs AND :endTs");
     params.put("startTs", startTimestamp);
     params.put("endTs", endTimestamp);
 
@@ -49,8 +53,24 @@ public class RecordsRepository {
       sql.append(" AND account_number = :accountNumber");
       params.put("accountNumber", accountNumber);
     }
+    if (latencyMin != null) {
+      sql.append(" AND latency_ms >= :latencyMin");
+      params.put("latencyMin", latencyMin);
+    }
+    if (latencyMax != null) {
+      sql.append(" AND latency_ms <= :latencyMax");
+      params.put("latencyMax", latencyMax);
+    }
+    if (receivedLatencyMin != null) {
+      sql.append(" AND latency_event_received_ms >= :receivedLatencyMin");
+      params.put("receivedLatencyMin", receivedLatencyMin);
+    }
+    if (receivedLatencyMax != null) {
+      sql.append(" AND latency_event_received_ms <= :receivedLatencyMax");
+      params.put("receivedLatencyMax", receivedLatencyMax);
+    }
 
-    sql.append(" ORDER BY event_received_timestamp DESC, id DESC LIMIT :limit OFFSET :offset");
+    sql.append(" ORDER BY event_date_time DESC, id DESC LIMIT :limit OFFSET :offset");
     params.put("limit", limit);
     params.put("offset", offset);
 
@@ -65,13 +85,17 @@ public class RecordsRepository {
       LocalDateTime endTimestamp,
       String traceId,
       String messageKey,
-      String accountNumber) {
+      String accountNumber,
+      Long latencyMin,
+      Long latencyMax,
+      Long receivedLatencyMin,
+      Long receivedLatencyMax) {
     StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS total_count FROM ").append(successTable);
     Map<String, Object> params = new HashMap<>();
     sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
     params.put("startDay", startDay);
     params.put("endDay", endDay);
-    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    sql.append(" AND event_date_time BETWEEN :startTs AND :endTs");
     params.put("startTs", startTimestamp);
     params.put("endTs", endTimestamp);
 
@@ -86,6 +110,22 @@ public class RecordsRepository {
     if (accountNumber != null && !accountNumber.isBlank()) {
       sql.append(" AND account_number = :accountNumber");
       params.put("accountNumber", accountNumber);
+    }
+    if (latencyMin != null) {
+      sql.append(" AND latency_ms >= :latencyMin");
+      params.put("latencyMin", latencyMin);
+    }
+    if (latencyMax != null) {
+      sql.append(" AND latency_ms <= :latencyMax");
+      params.put("latencyMax", latencyMax);
+    }
+    if (receivedLatencyMin != null) {
+      sql.append(" AND latency_event_received_ms >= :receivedLatencyMin");
+      params.put("receivedLatencyMin", receivedLatencyMin);
+    }
+    if (receivedLatencyMax != null) {
+      sql.append(" AND latency_event_received_ms <= :receivedLatencyMax");
+      params.put("receivedLatencyMax", receivedLatencyMax);
     }
 
     return jdbcClient
@@ -104,6 +144,10 @@ public class RecordsRepository {
       String traceId,
       String messageKey,
       String accountNumber,
+      Long latencyMin,
+      Long latencyMax,
+      Long receivedLatencyMin,
+      Long receivedLatencyMax,
       String exceptionType,
       Boolean retriable,
       Integer retryAttemptMin,
@@ -115,7 +159,7 @@ public class RecordsRepository {
     sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
     params.put("startDay", startDay);
     params.put("endDay", endDay);
-    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    sql.append(" AND event_date_time BETWEEN :startTs AND :endTs");
     params.put("startTs", startTimestamp);
     params.put("endTs", endTimestamp);
 
@@ -130,6 +174,22 @@ public class RecordsRepository {
     if (accountNumber != null && !accountNumber.isBlank()) {
       sql.append(" AND account_number = :accountNumber");
       params.put("accountNumber", accountNumber);
+    }
+    if (latencyMin != null) {
+      sql.append(" AND latency_ms >= :latencyMin");
+      params.put("latencyMin", latencyMin);
+    }
+    if (latencyMax != null) {
+      sql.append(" AND latency_ms <= :latencyMax");
+      params.put("latencyMax", latencyMax);
+    }
+    if (receivedLatencyMin != null) {
+      sql.append(" AND latency_event_received_ms >= :receivedLatencyMin");
+      params.put("receivedLatencyMin", receivedLatencyMin);
+    }
+    if (receivedLatencyMax != null) {
+      sql.append(" AND latency_event_received_ms <= :receivedLatencyMax");
+      params.put("receivedLatencyMax", receivedLatencyMax);
     }
     if (exceptionType != null && !exceptionType.isBlank()) {
       sql.append(" AND exception_type = :exceptionType");
@@ -148,7 +208,7 @@ public class RecordsRepository {
       params.put("retryAttemptMax", retryAttemptMax);
     }
 
-    sql.append(" ORDER BY event_received_timestamp DESC, id DESC LIMIT :limit OFFSET :offset");
+    sql.append(" ORDER BY event_date_time DESC, id DESC LIMIT :limit OFFSET :offset");
     params.put("limit", limit);
     params.put("offset", offset);
 
@@ -164,6 +224,10 @@ public class RecordsRepository {
       String traceId,
       String messageKey,
       String accountNumber,
+      Long latencyMin,
+      Long latencyMax,
+      Long receivedLatencyMin,
+      Long receivedLatencyMax,
       String exceptionType,
       Boolean retriable,
       Integer retryAttemptMin,
@@ -173,7 +237,7 @@ public class RecordsRepository {
     sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
     params.put("startDay", startDay);
     params.put("endDay", endDay);
-    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    sql.append(" AND event_date_time BETWEEN :startTs AND :endTs");
     params.put("startTs", startTimestamp);
     params.put("endTs", endTimestamp);
 
@@ -188,6 +252,22 @@ public class RecordsRepository {
     if (accountNumber != null && !accountNumber.isBlank()) {
       sql.append(" AND account_number = :accountNumber");
       params.put("accountNumber", accountNumber);
+    }
+    if (latencyMin != null) {
+      sql.append(" AND latency_ms >= :latencyMin");
+      params.put("latencyMin", latencyMin);
+    }
+    if (latencyMax != null) {
+      sql.append(" AND latency_ms <= :latencyMax");
+      params.put("latencyMax", latencyMax);
+    }
+    if (receivedLatencyMin != null) {
+      sql.append(" AND latency_event_received_ms >= :receivedLatencyMin");
+      params.put("receivedLatencyMin", receivedLatencyMin);
+    }
+    if (receivedLatencyMax != null) {
+      sql.append(" AND latency_event_received_ms <= :receivedLatencyMax");
+      params.put("receivedLatencyMax", receivedLatencyMax);
     }
     if (exceptionType != null && !exceptionType.isBlank()) {
       sql.append(" AND exception_type = :exceptionType");
@@ -224,7 +304,7 @@ public class RecordsRepository {
     sql.append(" WHERE event_date BETWEEN :startDay AND :endDay");
     params.put("startDay", startDay);
     params.put("endDay", endDay);
-    sql.append(" AND event_received_timestamp BETWEEN :startTs AND :endTs");
+    sql.append(" AND event_date_time BETWEEN :startTs AND :endTs");
     params.put("startTs", startTimestamp);
     params.put("endTs", endTimestamp);
     sql.append(" AND exception_type IS NOT NULL AND exception_type <> ''");

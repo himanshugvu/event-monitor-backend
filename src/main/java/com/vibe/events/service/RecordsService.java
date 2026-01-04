@@ -35,12 +35,24 @@ public class RecordsService {
       Integer size,
       String traceId,
       String messageKey,
-      String accountNumber) {
+      String accountNumber,
+      Long latencyMin,
+      Long latencyMax,
+      Long receivedLatencyMin,
+      Long receivedLatencyMax) {
     int resolvedSize = resolveSize(size);
     int resolvedPage = resolvePage(page);
     int offset = resolvedPage * resolvedSize;
     String table = registry.successTable(eventKey);
     DateTimeRange range = resolveRange(day, fromDate, toDate, fromTime, toTime);
+    if (latencyMin != null && latencyMax != null && latencyMin > latencyMax) {
+      throw new BadRequestException("latencyMin cannot be greater than latencyMax.");
+    }
+    if (receivedLatencyMin != null
+        && receivedLatencyMax != null
+        && receivedLatencyMin > receivedLatencyMax) {
+      throw new BadRequestException("receivedLatencyMin cannot be greater than receivedLatencyMax.");
+    }
 
     List<Map<String, Object>> rows =
         repository.loadSuccessRows(
@@ -52,6 +64,10 @@ public class RecordsService {
             traceId,
             messageKey,
             accountNumber,
+            latencyMin,
+            latencyMax,
+            receivedLatencyMin,
+            receivedLatencyMax,
             offset,
             resolvedSize);
     long total =
@@ -63,7 +79,11 @@ public class RecordsService {
             range.endTimestamp(),
             traceId,
             messageKey,
-            accountNumber);
+            accountNumber,
+            latencyMin,
+            latencyMax,
+            receivedLatencyMin,
+            receivedLatencyMax);
     return new PagedRowsResponse(resolvedPage, resolvedSize, total, rows);
   }
 
@@ -79,6 +99,10 @@ public class RecordsService {
       String traceId,
       String messageKey,
       String accountNumber,
+      Long latencyMin,
+      Long latencyMax,
+      Long receivedLatencyMin,
+      Long receivedLatencyMax,
       String exceptionType,
       Boolean retriable,
       Integer retryAttemptMin,
@@ -93,6 +117,14 @@ public class RecordsService {
         && retryAttemptMin > retryAttemptMax) {
       throw new BadRequestException("retryAttemptMin cannot be greater than retryAttemptMax.");
     }
+    if (latencyMin != null && latencyMax != null && latencyMin > latencyMax) {
+      throw new BadRequestException("latencyMin cannot be greater than latencyMax.");
+    }
+    if (receivedLatencyMin != null
+        && receivedLatencyMax != null
+        && receivedLatencyMin > receivedLatencyMax) {
+      throw new BadRequestException("receivedLatencyMin cannot be greater than receivedLatencyMax.");
+    }
 
     String table = registry.failureTable(eventKey);
     List<Map<String, Object>> rows =
@@ -105,6 +137,10 @@ public class RecordsService {
             traceId,
             messageKey,
             accountNumber,
+            latencyMin,
+            latencyMax,
+            receivedLatencyMin,
+            receivedLatencyMax,
             exceptionType,
             retriable,
             retryAttemptMin,
@@ -121,6 +157,10 @@ public class RecordsService {
             traceId,
             messageKey,
             accountNumber,
+            latencyMin,
+            latencyMax,
+            receivedLatencyMin,
+            receivedLatencyMax,
             exceptionType,
             retriable,
             retryAttemptMin,

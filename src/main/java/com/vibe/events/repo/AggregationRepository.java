@@ -20,30 +20,27 @@ public class AggregationRepository {
   public SuccessTotals loadSuccessTotals(String successTable, LocalDate day) {
     String sql =
         "SELECT COUNT(*) AS success_count, "
-            + "AVG(TIMESTAMPDIFF(MICROSECOND, event_received_timestamp, event_sent_timestamp)) / 1000 "
-            + "AS avg_latency_ms "
+            + "AVG(latency_ms) AS avg_latency_ms "
             + "FROM "
             + successTable
             + " WHERE event_date = :day";
-    SuccessTotals totals =
-        jdbcClient
-            .sql(sql)
-            .param("day", day)
-            .query(
-                (rs, rowNum) ->
-                    new SuccessTotals(
-                        rs.getLong("success_count"),
-                        rs.getObject("avg_latency_ms", Double.class),
-                        null))
-            .single();
-    Double p95 = loadSuccessLatencyPercentile(successTable, day, totals.successCount(), 0.95);
-    return new SuccessTotals(totals.successCount(), totals.avgLatencyMs(), p95);
+    return jdbcClient
+        .sql(sql)
+        .param("day", day)
+        .query(
+            (rs, rowNum) ->
+                new SuccessTotals(
+                    rs.getLong("success_count"),
+                    rs.getObject("avg_latency_ms", Double.class),
+                    null))
+        .single();
   }
 
   public FailureTotals loadFailureTotals(String failureTable, LocalDate day) {
     String sql =
         "SELECT COUNT(*) AS failure_count, "
-            + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count "
+            + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count, "
+            + "AVG(latency_ms) AS avg_latency_ms "
             + "FROM "
             + failureTable
             + " WHERE event_date = :day";
@@ -52,20 +49,22 @@ public class AggregationRepository {
         .param("day", day)
         .query(
             (rs, rowNum) ->
-                new FailureTotals(rs.getLong("failure_count"), rs.getLong("retriable_count")))
+                new FailureTotals(
+                    rs.getLong("failure_count"),
+                    rs.getLong("retriable_count"),
+                    rs.getObject("avg_latency_ms", Double.class)))
         .single();
   }
 
   public Map<Integer, SuccessBucket> loadHourlySuccessBuckets(String successTable, LocalDate day) {
     String sql =
-        "SELECT HOUR(event_received_timestamp) AS hour_of_day, "
+        "SELECT HOUR(event_date_time) AS hour_of_day, "
             + "COUNT(*) AS success_count, "
-            + "AVG(TIMESTAMPDIFF(MICROSECOND, event_received_timestamp, event_sent_timestamp)) / 1000 "
-            + "AS avg_latency_ms "
+            + "AVG(latency_ms) AS avg_latency_ms "
             + "FROM "
             + successTable
             + " WHERE event_date = :day "
-            + "GROUP BY HOUR(event_received_timestamp) "
+            + "GROUP BY HOUR(event_date_time) "
             + "ORDER BY hour_of_day";
     List<SuccessBucket> buckets =
         jdbcClient
@@ -88,13 +87,14 @@ public class AggregationRepository {
 
   public Map<Integer, FailureBucket> loadHourlyFailureBuckets(String failureTable, LocalDate day) {
     String sql =
-        "SELECT HOUR(event_received_timestamp) AS hour_of_day, "
+        "SELECT HOUR(event_date_time) AS hour_of_day, "
             + "COUNT(*) AS failure_count, "
-            + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count "
+            + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count, "
+            + "AVG(latency_ms) AS avg_latency_ms "
             + "FROM "
             + failureTable
             + " WHERE event_date = :day "
-            + "GROUP BY HOUR(event_received_timestamp) "
+            + "GROUP BY HOUR(event_date_time) "
             + "ORDER BY hour_of_day";
     List<FailureBucket> buckets =
         jdbcClient
@@ -106,7 +106,8 @@ public class AggregationRepository {
                         rs.getInt("hour_of_day"),
                         null,
                         rs.getLong("failure_count"),
-                        rs.getLong("retriable_count")))
+                        rs.getLong("retriable_count"),
+                        rs.getObject("avg_latency_ms", Double.class)))
             .list();
     Map<Integer, FailureBucket> result = new HashMap<>();
     for (FailureBucket bucket : buckets) {
@@ -118,15 +119,14 @@ public class AggregationRepository {
   public Map<BucketKey, SuccessBucket> loadQuarterHourSuccessBuckets(
       String successTable, LocalDate day) {
     String sql =
-        "SELECT HOUR(event_received_timestamp) AS hour_of_day, "
-            + "FLOOR(MINUTE(event_received_timestamp) / 15) AS quarter, "
+        "SELECT HOUR(event_date_time) AS hour_of_day, "
+            + "FLOOR(MINUTE(event_date_time) / 15) AS quarter, "
             + "COUNT(*) AS success_count, "
-            + "AVG(TIMESTAMPDIFF(MICROSECOND, event_received_timestamp, event_sent_timestamp)) / 1000 "
-            + "AS avg_latency_ms "
+            + "AVG(latency_ms) AS avg_latency_ms "
             + "FROM "
             + successTable
             + " WHERE event_date = :day "
-            + "GROUP BY HOUR(event_received_timestamp), FLOOR(MINUTE(event_received_timestamp) / 15) "
+            + "GROUP BY HOUR(event_date_time), FLOOR(MINUTE(event_date_time) / 15) "
             + "ORDER BY hour_of_day, quarter";
     List<SuccessBucket> buckets =
         jdbcClient
@@ -150,14 +150,15 @@ public class AggregationRepository {
   public Map<BucketKey, FailureBucket> loadQuarterHourFailureBuckets(
       String failureTable, LocalDate day) {
     String sql =
-        "SELECT HOUR(event_received_timestamp) AS hour_of_day, "
-            + "FLOOR(MINUTE(event_received_timestamp) / 15) AS quarter, "
+        "SELECT HOUR(event_date_time) AS hour_of_day, "
+            + "FLOOR(MINUTE(event_date_time) / 15) AS quarter, "
             + "COUNT(*) AS failure_count, "
-            + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count "
+            + "SUM(CASE WHEN retriable = 1 THEN 1 ELSE 0 END) AS retriable_count, "
+            + "AVG(latency_ms) AS avg_latency_ms "
             + "FROM "
             + failureTable
             + " WHERE event_date = :day "
-            + "GROUP BY HOUR(event_received_timestamp), FLOOR(MINUTE(event_received_timestamp) / 15) "
+            + "GROUP BY HOUR(event_date_time), FLOOR(MINUTE(event_date_time) / 15) "
             + "ORDER BY hour_of_day, quarter";
     List<FailureBucket> buckets =
         jdbcClient
@@ -169,7 +170,8 @@ public class AggregationRepository {
                         rs.getInt("hour_of_day"),
                         rs.getInt("quarter"),
                         rs.getLong("failure_count"),
-                        rs.getLong("retriable_count")))
+                        rs.getLong("retriable_count"),
+                        rs.getObject("avg_latency_ms", Double.class)))
             .list();
     Map<BucketKey, FailureBucket> result = new HashMap<>();
     for (FailureBucket bucket : buckets) {
@@ -178,31 +180,48 @@ public class AggregationRepository {
     return result;
   }
 
-  public Double loadSuccessLatencyPercentileAcrossTables(
-      List<String> successTables, LocalDate day, long totalSuccess, double percentile) {
-    if (totalSuccess <= 0 || successTables == null || successTables.isEmpty()) {
+  public Double loadAverageLatency(String table, String column, LocalDate day) {
+    String sql =
+        "SELECT AVG(" + column + ") AS avg_latency_ms FROM " + table + " WHERE event_date = :day";
+    return jdbcClient
+        .sql(sql)
+        .param("day", day)
+        .query((rs, rowNum) -> rs.getObject("avg_latency_ms", Double.class))
+        .optional()
+        .orElse(null);
+  }
+
+  public Double loadLatencyPercentileAcrossTables(
+      List<String> tables, String column, LocalDate day, long totalCount, double percentile) {
+    if (totalCount <= 0 || tables == null || tables.isEmpty()) {
       return null;
     }
     String unionSql =
-        successTables.stream()
-            .map(this::baseLatencySelect)
+        tables.stream()
+            .map((table) -> baseLatencySelect(table, column))
             .collect(Collectors.joining(" UNION ALL "));
-    return loadLatencyPercentile(unionSql, day, totalSuccess, percentile);
+    return loadLatencyPercentile(unionSql, day, totalCount, percentile);
   }
 
-  private Double loadSuccessLatencyPercentile(
-      String successTable, LocalDate day, long totalSuccess, double percentile) {
-    if (totalSuccess <= 0) {
+  public Double loadMaxLatencyAcrossTables(List<String> tables, String column, LocalDate day) {
+    if (tables == null || tables.isEmpty()) {
       return null;
     }
-    return loadLatencyPercentile(baseLatencySelect(successTable), day, totalSuccess, percentile);
+    String unionSql =
+        tables.stream()
+            .map((table) -> baseLatencySelect(table, column))
+            .collect(Collectors.joining(" UNION ALL "));
+    String sql = "SELECT MAX(latency_ms) AS max_latency FROM (" + unionSql + ") latency_values";
+    return jdbcClient
+        .sql(sql)
+        .param("day", day)
+        .query((rs, rowNum) -> rs.getObject("max_latency", Double.class))
+        .optional()
+        .orElse(null);
   }
 
-  private String baseLatencySelect(String successTable) {
-    return "SELECT TIMESTAMPDIFF(MICROSECOND, event_received_timestamp, event_sent_timestamp) / 1000 "
-        + "AS latency_ms FROM "
-        + successTable
-        + " WHERE event_date = :day";
+  private String baseLatencySelect(String table, String column) {
+    return "SELECT " + column + " AS latency_ms FROM " + table + " WHERE event_date = :day";
   }
 
   private Double loadLatencyPercentile(

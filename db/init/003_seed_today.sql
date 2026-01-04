@@ -3,41 +3,44 @@ INSERT INTO payments_in_success (
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
+  latency_event_sent_ms,
   target_topic,
   target_partition_id,
   target_offset
 ) VALUES
   (CURDATE(), 'trace-pay-101', 'ACC-3001', 'RETAIL', TIMESTAMP(CURDATE(), '08:05:00'),
    'payments.raw', 1, 110, 'pay-key-101', '{"amount":120}', '{"amount":120,"status":"ok"}',
-   TIMESTAMP(CURDATE(), '08:05:04'), 'payments.processed', 2, 210),
+   4000, 1500, 2500, 'payments.processed', 2, 210),
   (CURDATE(), 'trace-pay-102', 'ACC-3002', 'SMB', TIMESTAMP(CURDATE(), '09:20:00'),
    'payments.raw', 1, 111, 'pay-key-102', '{"amount":240}', '{"amount":240,"status":"ok"}',
-   TIMESTAMP(CURDATE(), '09:20:06'), 'payments.processed', 2, 211),
+   6000, 2500, 3500, 'payments.processed', 2, 211),
   (CURDATE(), 'trace-pay-103', 'ACC-3003', 'RETAIL', TIMESTAMP(CURDATE(), '10:15:00'),
    'payments.raw', 1, 112, 'pay-key-103', '{"amount":65}', '{"amount":65,"status":"ok"}',
-   TIMESTAMP(CURDATE(), '10:15:03'), 'payments.processed', 2, 212);
+   3000, 1200, 1800, 'payments.processed', 2, 212);
 
 INSERT INTO payments_in_failure (
   event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
   target_topic,
   target_partition_id,
   target_offset,
@@ -49,7 +52,7 @@ INSERT INTO payments_in_failure (
 ) VALUES
   (CURDATE(), 'trace-pay-f-101', 'ACC-3009', 'SMB', TIMESTAMP(CURDATE(), '11:05:00'),
    'payments.raw', 1, 113, 'pay-key-104', '{"amount":90}', '{"amount":90}',
-   TIMESTAMP(CURDATE(), '11:05:05'), 'payments.processed', 2, 213,
+   5000, 5000, 'payments.processed', 2, 213,
    'TimeoutException', 'Downstream timeout', 'stack...', 1, 0);
 
 INSERT INTO loans_in_success (
@@ -57,38 +60,41 @@ INSERT INTO loans_in_success (
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
+  latency_event_sent_ms,
   target_topic,
   target_partition_id,
   target_offset
 ) VALUES
   (CURDATE(), 'trace-loan-101', 'ACC-4001', 'RETAIL', TIMESTAMP(CURDATE(), '08:35:00'),
    'loans.raw', 3, 510, 'loan-key-101', '{"loanAmount":15000}', '{"loanAmount":15000,"status":"ok"}',
-   TIMESTAMP(CURDATE(), '08:35:09'), 'loans.processed', 4, 610),
+   9000, 3500, 5500, 'loans.processed', 4, 610),
   (CURDATE(), 'trace-loan-102', 'ACC-4002', 'SMB', TIMESTAMP(CURDATE(), '12:10:00'),
    'loans.raw', 3, 511, 'loan-key-102', '{"loanAmount":6500}', '{"loanAmount":6500,"status":"ok"}',
-   TIMESTAMP(CURDATE(), '12:10:08'), 'loans.processed', 4, 611);
+   8000, 3000, 5000, 'loans.processed', 4, 611);
 
 INSERT INTO loans_in_failure (
   event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
   target_topic,
   target_partition_id,
   target_offset,
@@ -100,7 +106,7 @@ INSERT INTO loans_in_failure (
 ) VALUES
   (CURDATE(), 'trace-loan-f-101', 'ACC-4009', 'RETAIL', TIMESTAMP(CURDATE(), '13:25:00'),
    'loans.raw', 3, 512, 'loan-key-103', '{"loanAmount":2400}', '{"loanAmount":2400}',
-   TIMESTAMP(CURDATE(), '13:25:05'), 'loans.processed', 4, 612,
+   5000, 5000, 'loans.processed', 4, 612,
    'ValidationException', 'Loan data invalid', 'stack...', 0, 1);
 
 INSERT INTO cards_in_success (
@@ -108,38 +114,41 @@ INSERT INTO cards_in_success (
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
+  latency_event_sent_ms,
   target_topic,
   target_partition_id,
   target_offset
 ) VALUES
   (CURDATE(), 'trace-card-101', 'ACC-5001', 'RETAIL', TIMESTAMP(CURDATE(), '07:55:00'),
    'cards.raw', 2, 310, 'card-key-101', '{"cardType":"debit"}', '{"cardType":"debit","status":"ok"}',
-   TIMESTAMP(CURDATE(), '07:55:04'), 'cards.processed', 2, 410),
+   4000, 1500, 2500, 'cards.processed', 2, 410),
   (CURDATE(), 'trace-card-102', 'ACC-5002', 'SMB', TIMESTAMP(CURDATE(), '14:40:00'),
    'cards.raw', 2, 311, 'card-key-102', '{"cardType":"credit"}', '{"cardType":"credit","status":"ok"}',
-   TIMESTAMP(CURDATE(), '14:40:06'), 'cards.processed', 2, 411);
+   6000, 2500, 3500, 'cards.processed', 2, 411);
 
 INSERT INTO cards_in_failure (
   event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
   target_topic,
   target_partition_id,
   target_offset,
@@ -151,7 +160,7 @@ INSERT INTO cards_in_failure (
 ) VALUES
   (CURDATE(), 'trace-card-f-101', 'ACC-5009', 'RETAIL', TIMESTAMP(CURDATE(), '15:05:00'),
    'cards.raw', 2, 312, 'card-key-103', '{"cardType":"debit"}', '{"cardType":"debit"}',
-   TIMESTAMP(CURDATE(), '15:05:04'), 'cards.processed', 2, 412,
+   4000, 4000, 'cards.processed', 2, 412,
    'IllegalStateException', 'Card status invalid', 'stack...', 1, 0);
 
 INSERT INTO accounts_in_success (
@@ -159,38 +168,41 @@ INSERT INTO accounts_in_success (
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
+  latency_event_sent_ms,
   target_topic,
   target_partition_id,
   target_offset
 ) VALUES
   (CURDATE(), 'trace-acc-101', 'ACC-6001', 'RETAIL', TIMESTAMP(CURDATE(), '06:40:00'),
    'accounts.raw', 5, 710, 'acc-key-101', '{"type":"checking"}', '{"type":"checking","status":"ok"}',
-   TIMESTAMP(CURDATE(), '06:40:05'), 'accounts.processed', 5, 810),
+   5000, 2000, 3000, 'accounts.processed', 5, 810),
   (CURDATE(), 'trace-acc-102', 'ACC-6002', 'SMB', TIMESTAMP(CURDATE(), '09:50:00'),
    'accounts.raw', 5, 711, 'acc-key-102', '{"type":"savings"}', '{"type":"savings","status":"ok"}',
-   TIMESTAMP(CURDATE(), '09:50:07'), 'accounts.processed', 5, 811);
+   7000, 2500, 4500, 'accounts.processed', 5, 811);
 
 INSERT INTO accounts_in_failure (
   event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
   target_topic,
   target_partition_id,
   target_offset,
@@ -202,7 +214,7 @@ INSERT INTO accounts_in_failure (
 ) VALUES
   (CURDATE(), 'trace-acc-f-101', 'ACC-6009', 'RETAIL', TIMESTAMP(CURDATE(), '11:45:00'),
    'accounts.raw', 5, 712, 'acc-key-103', '{"type":"checking"}', '{"type":"checking"}',
-   TIMESTAMP(CURDATE(), '11:45:04'), 'accounts.processed', 5, 812,
+   4000, 4000, 'accounts.processed', 5, 812,
    'ValidationException', 'Account data missing', 'stack...', 0, 1);
 
 INSERT INTO transfers_in_success (
@@ -210,38 +222,41 @@ INSERT INTO transfers_in_success (
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
+  latency_event_sent_ms,
   target_topic,
   target_partition_id,
   target_offset
 ) VALUES
   (CURDATE(), 'trace-trf-101', 'ACC-7001', 'RETAIL', TIMESTAMP(CURDATE(), '10:05:00'),
    'transfers.raw', 6, 910, 'trf-key-101', '{"amount":500}', '{"amount":500,"status":"ok"}',
-   TIMESTAMP(CURDATE(), '10:05:05'), 'transfers.processed', 6, 1010),
+   5000, 2000, 3000, 'transfers.processed', 6, 1010),
   (CURDATE(), 'trace-trf-102', 'ACC-7002', 'SMB', TIMESTAMP(CURDATE(), '16:20:00'),
    'transfers.raw', 6, 911, 'trf-key-102', '{"amount":900}', '{"amount":900,"status":"ok"}',
-   TIMESTAMP(CURDATE(), '16:20:07'), 'transfers.processed', 6, 1011);
+   7000, 2500, 4500, 'transfers.processed', 6, 1011);
 
 INSERT INTO transfers_in_failure (
   event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
   target_topic,
   target_partition_id,
   target_offset,
@@ -253,7 +268,7 @@ INSERT INTO transfers_in_failure (
 ) VALUES
   (CURDATE(), 'trace-trf-f-101', 'ACC-7009', 'SMB', TIMESTAMP(CURDATE(), '17:35:00'),
    'transfers.raw', 6, 912, 'trf-key-103', '{"amount":1200}', '{"amount":1200}',
-   TIMESTAMP(CURDATE(), '17:35:06'), 'transfers.processed', 6, 1012,
+   6000, 6000, 'transfers.processed', 6, 1012,
    'TimeoutException', 'Transfer timeout', 'stack...', 1, 0);
 
 INSERT INTO alerts_in_success (
@@ -261,38 +276,41 @@ INSERT INTO alerts_in_success (
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
+  latency_event_sent_ms,
   target_topic,
   target_partition_id,
   target_offset
 ) VALUES
   (CURDATE(), 'trace-alt-101', 'ACC-8001', 'RETAIL', TIMESTAMP(CURDATE(), '05:30:00'),
    'alerts.raw', 7, 1110, 'alt-key-101', '{"type":"fraud"}', '{"type":"fraud","status":"ok"}',
-   TIMESTAMP(CURDATE(), '05:30:03'), 'alerts.processed', 7, 1210),
+   3000, 1200, 1800, 'alerts.processed', 7, 1210),
   (CURDATE(), 'trace-alt-102', 'ACC-8002', 'SMB', TIMESTAMP(CURDATE(), '18:15:00'),
    'alerts.raw', 7, 1111, 'alt-key-102', '{"type":"latency"}', '{"type":"latency","status":"ok"}',
-   TIMESTAMP(CURDATE(), '18:15:05'), 'alerts.processed', 7, 1211);
+   5000, 2000, 3000, 'alerts.processed', 7, 1211);
 
 INSERT INTO alerts_in_failure (
   event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_received_timestamp,
+  event_date_time,
   source_topic,
   source_partition_id,
   source_offset,
   message_key,
   source_payload,
   transformed_payload,
-  event_sent_timestamp,
+  latency_ms,
+  latency_event_received_ms,
   target_topic,
   target_partition_id,
   target_offset,
@@ -304,5 +322,5 @@ INSERT INTO alerts_in_failure (
 ) VALUES
   (CURDATE(), 'trace-alt-f-101', 'ACC-8009', 'RETAIL', TIMESTAMP(CURDATE(), '19:05:00'),
    'alerts.raw', 7, 1112, 'alt-key-103', '{"type":"fraud"}', '{"type":"fraud"}',
-   TIMESTAMP(CURDATE(), '19:05:04'), 'alerts.processed', 7, 1212,
+   4000, 4000, 'alerts.processed', 7, 1212,
    'RuntimeException', 'Alert dispatch failed', 'stack...', 0, 1);

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -19,8 +20,13 @@ public class HomeAggregationController {
   }
 
   @GetMapping("/home")
-  public HomeAggregationResponse getHome(@PathVariable String day) {
+  public HomeAggregationResponse getHome(
+      @PathVariable String day,
+      @RequestParam(defaultValue = "false") boolean refresh) {
     LocalDate parsedDay = DayValidator.parseDay(day);
+    if (refresh) {
+      aggregationService.refreshHome(parsedDay);
+    }
     return aggregationService.getHomeAggregation(parsedDay);
   }
 }

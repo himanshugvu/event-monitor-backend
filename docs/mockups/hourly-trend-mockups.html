@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hourly Trend Mockups</title>
+    <style>
+      :root {
+        --bg: #f5efe8;
+        --panel: #fff9f2;
+        --ink: #1f1b16;
+        --muted: #6e6256;
+        --accent: #c56a45;
+        --accent-2: #5d8d7a;
+        --accent-3: #b84f61;
+        --accent-4: #3f6f9a;
+        --grid: #e5dacf;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Work Sans", "Helvetica Neue", sans-serif;
+        background: radial-gradient(circle at 15% 15%, #fff3e2, var(--bg));
+        color: var(--ink);
+      }
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: 0.5px;
+      }
+      header p {
+        margin: 4px 0 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+      }
+      .mockup {
+        background: var(--panel);
+        border: 1px solid var(--grid);
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: 0 8px 24px rgba(28, 21, 16, 0.08);
+        position: relative;
+        min-height: 260px;
+      }
+      .mockup h2 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+      }
+      .subtle {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        margin-top: 10px;
+        font-size: 12px;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      .chip {
+        border: 1px solid var(--grid);
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #fff;
+        font-size: 11px;
+      }
+      .axis {
+        position: absolute;
+        right: 16px;
+        top: 54px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .gridlines {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        top: 86px;
+        bottom: 16px;
+        background-image: linear-gradient(to bottom, transparent 0, transparent 19%, var(--grid) 20%, transparent 21%);
+        background-size: 100% 25%;
+        opacity: 0.6;
+        pointer-events: none;
+      }
+      .mini {
+        height: 64px;
+      }
+      .stack {
+        display: grid;
+        gap: 10px;
+      }
+      .badge {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        background: #f6e1d7;
+        color: var(--accent);
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        border: 1px solid #efc9b7;
+      }
+      .bar-row {
+        display: grid;
+        grid-template-columns: repeat(24, 1fr);
+        gap: 4px;
+        margin-top: 16px;
+      }
+      .bar {
+        height: 44px;
+        border-radius: 8px;
+        background: linear-gradient(to top, #d9c7b8, #f6efe7);
+        position: relative;
+        overflow: hidden;
+      }
+      .bar span {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 40%;
+        background: #c56a45;
+        opacity: 0.8;
+      }
+      .heat {
+        height: 12px;
+        border-radius: 6px;
+        background: linear-gradient(90deg, #eaded0, #c56a45);
+        margin: 10px 0 6px;
+      }
+      .split {
+        display: grid;
+        gap: 8px;
+      }
+      .tile-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .tile {
+        height: 28px;
+        border-radius: 8px;
+        background: #efe4d7;
+        border: 1px solid #e2d4c6;
+        position: relative;
+        overflow: hidden;
+      }
+      .tile span {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(93, 141, 122, 0.7), rgba(93, 141, 122, 0.15));
+      }
+      .range-bands {
+        position: absolute;
+        inset: 74px 16px 16px 16px;
+        background: linear-gradient(
+          to bottom,
+          rgba(93, 141, 122, 0.14),
+          rgba(93, 141, 122, 0.12) 33%,
+          rgba(197, 106, 69, 0.12) 33%,
+          rgba(197, 106, 69, 0.1) 66%,
+          rgba(184, 79, 97, 0.1) 66%,
+          rgba(184, 79, 97, 0.08)
+        );
+        border-radius: 12px;
+        border: 1px solid #e5dacf;
+        pointer-events: none;
+      }
+      .radial {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .radial svg {
+        flex: 0 0 160px;
+      }
+      .radial .legend {
+        margin-top: 0;
+      }
+      .dark-card {
+        background: #1b232c;
+        color: #e6edf5;
+        border: 1px solid #2d3742;
+        box-shadow: 0 14px 30px rgba(7, 10, 14, 0.4);
+      }
+      .dark-card .subtle {
+        color: #9fb0c2;
+      }
+      .dark-card .legend {
+        color: #c9d6e4;
+      }
+      .dark-card .chip {
+        background: #25303b;
+        border-color: #2f3c48;
+      }
+      .dark-card .badge {
+        background: #24303a;
+        color: #86c1f1;
+        border-color: #2f3c48;
+      }
+      .dark-grid {
+        stroke: #2b3946;
+      }
+      .dark-axis {
+        color: #8ba0b3;
+      }
+      @media (max-width: 720px) {
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div>
+          <h1>Hourly Trend Mockups</h1>
+          <p>Pick one direction. These are visual-only explorations.</p>
+        </div>
+        <div class="subtle">15 options</div>
+      </header>
+
+      <div class="grid">
+        <section class="mockup">
+          <div class="badge">Option A</div>
+          <h2>Layered area + dual lines</h2>
+          <div class="subtle">Volume as soft area, success and failure lines</div>
+          <div class="axis">Latency ms</div>
+          <div class="gridlines"></div>
+          <svg viewBox="0 0 520 180" width="100%" height="180" aria-hidden="true">
+            <defs>
+              <linearGradient id="volA" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#e9dbcf" />
+                <stop offset="100%" stop-color="#fff3e5" />
+              </linearGradient>
+            </defs>
+            <path d="M0 130 L40 124 L80 118 L120 110 L160 112 L200 104 L240 98 L280 100 L320 92 L360 96 L400 90 L440 88 L480 94 L520 92 L520 170 L0 170 Z" fill="url(#volA)" />
+            <polyline points="0,96 40,92 80,88 120,86 160,84 200,78 240,76 280,72 320,70 360,68 400,70 440,66 480,64 520,62" fill="none" stroke="#5d8d7a" stroke-width="3" />
+            <polyline points="0,140 40,138 80,136 120,132 160,128 200,130 240,126 280,124 320,120 360,118 400,116 440,112 480,110 520,108" fill="none" stroke="#b84f61" stroke-width="3" />
+            <polyline points="0,160 40,158 80,152 120,150 160,148 200,150 240,148 280,144 320,142 360,144 400,140 440,138 480,134 520,132" fill="none" stroke="#c56a45" stroke-width="2" stroke-dasharray="6 6" />
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success rate</div>
+            <div><span class="dot" style="background:#b84f61"></span>Failure rate</div>
+            <div><span class="dot" style="background:#c56a45"></span>Latency</div>
+            <div class="chip">24H</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option B</div>
+          <h2>Stacked bars + latency rail</h2>
+          <div class="subtle">Shows volume per hour with a thin latency rail</div>
+          <svg viewBox="0 0 520 170" width="100%" height="170" aria-hidden="true">
+            <rect x="0" y="10" width="520" height="120" rx="12" fill="#f7efe6" stroke="#e5dacf" />
+            <g fill="#5d8d7a">
+              <rect x="16" y="60" width="12" height="70" rx="4" />
+              <rect x="40" y="50" width="12" height="80" rx="4" />
+              <rect x="64" y="65" width="12" height="65" rx="4" />
+              <rect x="88" y="45" width="12" height="85" rx="4" />
+              <rect x="112" y="68" width="12" height="62" rx="4" />
+              <rect x="136" y="50" width="12" height="80" rx="4" />
+              <rect x="160" y="58" width="12" height="72" rx="4" />
+              <rect x="184" y="42" width="12" height="88" rx="4" />
+              <rect x="208" y="60" width="12" height="70" rx="4" />
+              <rect x="232" y="40" width="12" height="90" rx="4" />
+              <rect x="256" y="54" width="12" height="76" rx="4" />
+              <rect x="280" y="48" width="12" height="82" rx="4" />
+              <rect x="304" y="60" width="12" height="70" rx="4" />
+              <rect x="328" y="44" width="12" height="86" rx="4" />
+              <rect x="352" y="64" width="12" height="66" rx="4" />
+              <rect x="376" y="50" width="12" height="80" rx="4" />
+              <rect x="400" y="58" width="12" height="72" rx="4" />
+              <rect x="424" y="46" width="12" height="84" rx="4" />
+              <rect x="448" y="66" width="12" height="64" rx="4" />
+              <rect x="472" y="54" width="12" height="76" rx="4" />
+              <rect x="496" y="60" width="12" height="70" rx="4" />
+            </g>
+            <g fill="#b84f61">
+              <rect x="16" y="90" width="12" height="40" rx="4" />
+              <rect x="40" y="86" width="12" height="44" rx="4" />
+              <rect x="64" y="92" width="12" height="38" rx="4" />
+              <rect x="88" y="80" width="12" height="50" rx="4" />
+              <rect x="112" y="96" width="12" height="34" rx="4" />
+              <rect x="136" y="84" width="12" height="46" rx="4" />
+              <rect x="160" y="90" width="12" height="40" rx="4" />
+              <rect x="184" y="76" width="12" height="54" rx="4" />
+              <rect x="208" y="90" width="12" height="40" rx="4" />
+              <rect x="232" y="74" width="12" height="56" rx="4" />
+              <rect x="256" y="88" width="12" height="42" rx="4" />
+              <rect x="280" y="82" width="12" height="48" rx="4" />
+              <rect x="304" y="90" width="12" height="40" rx="4" />
+              <rect x="328" y="78" width="12" height="52" rx="4" />
+              <rect x="352" y="92" width="12" height="38" rx="4" />
+              <rect x="376" y="84" width="12" height="46" rx="4" />
+              <rect x="400" y="90" width="12" height="40" rx="4" />
+              <rect x="424" y="80" width="12" height="50" rx="4" />
+              <rect x="448" y="96" width="12" height="34" rx="4" />
+              <rect x="472" y="88" width="12" height="42" rx="4" />
+              <rect x="496" y="90" width="12" height="40" rx="4" />
+            </g>
+            <polyline points="0,150 40,148 80,142 120,138 160,140 200,136 240,134 280,132 320,128 360,130 400,126 440,122 480,124 520,120" fill="none" stroke="#c56a45" stroke-width="3" />
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success volume</div>
+            <div><span class="dot" style="background:#b84f61"></span>Failure volume</div>
+            <div><span class="dot" style="background:#c56a45"></span>Latency</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option C</div>
+          <h2>Heatstrip + single line</h2>
+          <div class="subtle">Heat for volume, line for success rate</div>
+          <div class="heat"></div>
+          <svg viewBox="0 0 520 130" width="100%" height="130" aria-hidden="true">
+            <rect x="0" y="10" width="520" height="70" rx="12" fill="#f7efe6" stroke="#e5dacf" />
+            <polyline points="0,62 40,60 80,58 120,54 160,50 200,46 240,44 280,42 320,40 360,42 400,38 440,36 480,38 520,34" fill="none" stroke="#5d8d7a" stroke-width="4" />
+            <g fill="#c56a45">
+              <circle cx="160" cy="50" r="4" />
+              <circle cx="320" cy="40" r="4" />
+              <circle cx="440" cy="36" r="4" />
+            </g>
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success rate</div>
+            <div><span class="dot" style="background:#c56a45"></span>Spike markers</div>
+            <div class="chip">Show gaps</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option D</div>
+          <h2>Small multiples</h2>
+          <div class="subtle">Three focused strips: success, failure, latency</div>
+          <div class="stack">
+            <svg viewBox="0 0 520 60" width="100%" height="60" class="mini" aria-hidden="true">
+              <rect x="0" y="6" width="520" height="46" rx="10" fill="#f7efe6" stroke="#e5dacf" />
+              <polyline points="0,38 40,36 80,34 120,32 160,30 200,28 240,26 280,26 320,24 360,24 400,22 440,22 480,20 520,20" fill="none" stroke="#5d8d7a" stroke-width="3" />
+            </svg>
+            <svg viewBox="0 0 520 60" width="100%" height="60" class="mini" aria-hidden="true">
+              <rect x="0" y="6" width="520" height="46" rx="10" fill="#f7efe6" stroke="#e5dacf" />
+              <polyline points="0,40 40,42 80,44 120,42 160,40 200,38 240,40 280,42 320,40 360,38 400,40 440,42 480,40 520,38" fill="none" stroke="#b84f61" stroke-width="3" />
+            </svg>
+            <svg viewBox="0 0 520 60" width="100%" height="60" class="mini" aria-hidden="true">
+              <rect x="0" y="6" width="520" height="46" rx="10" fill="#f7efe6" stroke="#e5dacf" />
+              <polyline points="0,42 40,40 80,38 120,36 160,38 200,36 240,34 280,32 320,34 360,36 400,34 440,32 480,34 520,30" fill="none" stroke="#c56a45" stroke-width="3" />
+            </svg>
+          </div>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success rate</div>
+            <div><span class="dot" style="background:#b84f61"></span>Failure rate</div>
+            <div><span class="dot" style="background:#c56a45"></span>Latency</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option E</div>
+          <h2>Dot plot with volume skyline</h2>
+          <div class="subtle">Dots show success rate, skyline shows volume</div>
+          <div class="bar-row">
+            <div class="bar"><span style="height:30%"></span></div>
+            <div class="bar"><span style="height:45%"></span></div>
+            <div class="bar"><span style="height:35%"></span></div>
+            <div class="bar"><span style="height:55%"></span></div>
+            <div class="bar"><span style="height:28%"></span></div>
+            <div class="bar"><span style="height:52%"></span></div>
+            <div class="bar"><span style="height:40%"></span></div>
+            <div class="bar"><span style="height:60%"></span></div>
+            <div class="bar"><span style="height:42%"></span></div>
+            <div class="bar"><span style="height:66%"></span></div>
+            <div class="bar"><span style="height:44%"></span></div>
+            <div class="bar"><span style="height:58%"></span></div>
+            <div class="bar"><span style="height:36%"></span></div>
+            <div class="bar"><span style="height:54%"></span></div>
+            <div class="bar"><span style="height:32%"></span></div>
+            <div class="bar"><span style="height:50%"></span></div>
+            <div class="bar"><span style="height:40%"></span></div>
+            <div class="bar"><span style="height:62%"></span></div>
+            <div class="bar"><span style="height:30%"></span></div>
+            <div class="bar"><span style="height:48%"></span></div>
+            <div class="bar"><span style="height:36%"></span></div>
+            <div class="bar"><span style="height:46%"></span></div>
+            <div class="bar"><span style="height:34%"></span></div>
+            <div class="bar"><span style="height:44%"></span></div>
+          </div>
+          <svg viewBox="0 0 520 90" width="100%" height="90" aria-hidden="true">
+            <line x1="0" y1="70" x2="520" y2="70" stroke="#e5dacf" />
+            <g fill="#5d8d7a">
+              <circle cx="20" cy="54" r="5" />
+              <circle cx="60" cy="52" r="5" />
+              <circle cx="100" cy="50" r="5" />
+              <circle cx="140" cy="48" r="5" />
+              <circle cx="180" cy="46" r="5" />
+              <circle cx="220" cy="44" r="5" />
+              <circle cx="260" cy="42" r="5" />
+              <circle cx="300" cy="40" r="5" />
+              <circle cx="340" cy="38" r="5" />
+              <circle cx="380" cy="36" r="5" />
+              <circle cx="420" cy="34" r="5" />
+              <circle cx="460" cy="32" r="5" />
+              <circle cx="500" cy="30" r="5" />
+            </g>
+            <g fill="#b84f61">
+              <circle cx="100" cy="66" r="4" />
+              <circle cx="220" cy="64" r="4" />
+              <circle cx="340" cy="62" r="4" />
+            </g>
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success rate</div>
+            <div><span class="dot" style="background:#b84f61"></span>Failure spike</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option F</div>
+          <h2>Horizon bands</h2>
+          <div class="subtle">Compact layers for success, overlay latency line</div>
+          <svg viewBox="0 0 520 160" width="100%" height="160" aria-hidden="true">
+            <rect x="0" y="12" width="520" height="120" rx="12" fill="#f7efe6" stroke="#e5dacf" />
+            <path d="M0 120 L40 112 L80 104 L120 96 L160 90 L200 84 L240 80 L280 76 L320 72 L360 70 L400 68 L440 66 L480 64 L520 62 L520 132 L0 132 Z" fill="#5d8d7a" opacity="0.35" />
+            <path d="M0 132 L40 128 L80 124 L120 120 L160 118 L200 116 L240 114 L280 112 L320 110 L360 108 L400 106 L440 104 L480 102 L520 100 L520 140 L0 140 Z" fill="#5d8d7a" opacity="0.2" />
+            <polyline points="0,140 40,136 80,132 120,130 160,128 200,126 240,124 280,122 320,120 360,118 400,116 440,114 480,112 520,110" fill="none" stroke="#c56a45" stroke-width="3" />
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success bands</div>
+            <div><span class="dot" style="background:#c56a45"></span>Latency</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option G</div>
+          <h2>Status rail + callouts</h2>
+          <div class="subtle">Clean rail for success, red markers for failures</div>
+          <svg viewBox="0 0 520 140" width="100%" height="140" aria-hidden="true">
+            <rect x="0" y="20" width="520" height="40" rx="20" fill="#dfe8e1" />
+            <rect x="0" y="20" width="420" height="40" rx="20" fill="#5d8d7a" />
+            <rect x="420" y="20" width="100" height="40" rx="20" fill="#b84f61" />
+            <g fill="#c56a45">
+              <circle cx="180" cy="90" r="6" />
+              <circle cx="320" cy="96" r="6" />
+              <circle cx="440" cy="88" r="6" />
+            </g>
+            <polyline points="0,110 40,106 80,108 120,102 160,104 200,100 240,96 280,98 320,94 360,92 400,90 440,88 480,86 520,84" fill="none" stroke="#3f6f9a" stroke-width="3" />
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success rail</div>
+            <div><span class="dot" style="background:#b84f61"></span>Failure rail</div>
+            <div><span class="dot" style="background:#3f6f9a"></span>Latency</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option H</div>
+          <h2>Split: line + volume histogram</h2>
+          <div class="subtle">Top for rates, bottom for volume</div>
+          <div class="split">
+            <svg viewBox="0 0 520 80" width="100%" height="80" aria-hidden="true">
+              <rect x="0" y="8" width="520" height="64" rx="12" fill="#f7efe6" stroke="#e5dacf" />
+              <polyline points="0,50 40,48 80,46 120,44 160,42 200,40 240,38 280,36 320,34 360,36 400,34 440,32 480,34 520,30" fill="none" stroke="#5d8d7a" stroke-width="3" />
+              <polyline points="0,60 40,58 80,56 120,54 160,52 200,54 240,52 280,50 320,48 360,50 400,48 440,46 480,46 520,44" fill="none" stroke="#b84f61" stroke-width="3" />
+            </svg>
+            <svg viewBox="0 0 520 80" width="100%" height="80" aria-hidden="true">
+              <rect x="0" y="8" width="520" height="64" rx="12" fill="#f7efe6" stroke="#e5dacf" />
+              <g fill="#c56a45">
+                <rect x="12" y="42" width="12" height="30" rx="4" />
+                <rect x="36" y="36" width="12" height="36" rx="4" />
+                <rect x="60" y="46" width="12" height="26" rx="4" />
+                <rect x="84" y="32" width="12" height="40" rx="4" />
+                <rect x="108" y="48" width="12" height="24" rx="4" />
+                <rect x="132" y="38" width="12" height="34" rx="4" />
+                <rect x="156" y="44" width="12" height="28" rx="4" />
+                <rect x="180" y="30" width="12" height="42" rx="4" />
+                <rect x="204" y="44" width="12" height="28" rx="4" />
+                <rect x="228" y="34" width="12" height="38" rx="4" />
+                <rect x="252" y="40" width="12" height="32" rx="4" />
+                <rect x="276" y="36" width="12" height="36" rx="4" />
+                <rect x="300" y="44" width="12" height="28" rx="4" />
+                <rect x="324" y="32" width="12" height="40" rx="4" />
+                <rect x="348" y="46" width="12" height="26" rx="4" />
+                <rect x="372" y="38" width="12" height="34" rx="4" />
+                <rect x="396" y="44" width="12" height="28" rx="4" />
+                <rect x="420" y="34" width="12" height="38" rx="4" />
+                <rect x="444" y="46" width="12" height="26" rx="4" />
+                <rect x="468" y="40" width="12" height="32" rx="4" />
+                <rect x="492" y="44" width="12" height="28" rx="4" />
+              </g>
+            </svg>
+          </div>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success rate</div>
+            <div><span class="dot" style="background:#b84f61"></span>Failure rate</div>
+            <div><span class="dot" style="background:#c56a45"></span>Volume</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option I</div>
+          <h2>Threshold bands + markers</h2>
+          <div class="subtle">Colored quality bands for fast scanning</div>
+          <div class="range-bands"></div>
+          <svg viewBox="0 0 520 180" width="100%" height="180" aria-hidden="true">
+            <polyline points="0,132 40,126 80,120 120,118 160,114 200,110 240,106 280,104 320,100 360,98 400,96 440,92 480,90 520,88" fill="none" stroke="#5d8d7a" stroke-width="4" />
+            <polyline points="0,150 40,148 80,146 120,144 160,146 200,144 240,142 280,140 320,138 360,140 400,138 440,136 480,134 520,132" fill="none" stroke="#b84f61" stroke-width="3" stroke-dasharray="4 6" />
+            <g fill="#c56a45">
+              <circle cx="200" cy="110" r="5" />
+              <circle cx="320" cy="100" r="5" />
+              <circle cx="440" cy="92" r="5" />
+            </g>
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success rate</div>
+            <div><span class="dot" style="background:#b84f61"></span>Failure rate</div>
+            <div><span class="dot" style="background:#c56a45"></span>Anomaly markers</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option J</div>
+          <h2>Calendar tiles + latency sparkline</h2>
+          <div class="subtle">24 tiles for per-hour status, latency line above</div>
+          <svg viewBox="0 0 520 70" width="100%" height="70" aria-hidden="true">
+            <rect x="0" y="8" width="520" height="54" rx="12" fill="#f7efe6" stroke="#e5dacf" />
+            <polyline points="0,44 40,42 80,40 120,38 160,36 200,34 240,32 280,30 320,30 360,28 400,26 440,28 480,26 520,24" fill="none" stroke="#3f6f9a" stroke-width="3" />
+          </svg>
+          <div class="tile-grid">
+            <div class="tile"><span style="opacity:0.5"></span></div>
+            <div class="tile"><span style="opacity:0.6"></span></div>
+            <div class="tile"><span style="opacity:0.55"></span></div>
+            <div class="tile"><span style="opacity:0.7"></span></div>
+            <div class="tile"><span style="opacity:0.45"></span></div>
+            <div class="tile"><span style="opacity:0.65"></span></div>
+            <div class="tile"><span style="opacity:0.6"></span></div>
+            <div class="tile"><span style="opacity:0.75"></span></div>
+            <div class="tile"><span style="opacity:0.5"></span></div>
+            <div class="tile"><span style="opacity:0.8"></span></div>
+            <div class="tile"><span style="opacity:0.55"></span></div>
+            <div class="tile"><span style="opacity:0.7"></span></div>
+            <div class="tile"><span style="opacity:0.45"></span></div>
+            <div class="tile"><span style="opacity:0.66"></span></div>
+            <div class="tile"><span style="opacity:0.52"></span></div>
+            <div class="tile"><span style="opacity:0.68"></span></div>
+            <div class="tile"><span style="opacity:0.58"></span></div>
+            <div class="tile"><span style="opacity:0.74"></span></div>
+            <div class="tile"><span style="opacity:0.48"></span></div>
+            <div class="tile"><span style="opacity:0.64"></span></div>
+            <div class="tile"><span style="opacity:0.53"></span></div>
+            <div class="tile"><span style="opacity:0.6"></span></div>
+            <div class="tile"><span style="opacity:0.5"></span></div>
+            <div class="tile"><span style="opacity:0.62"></span></div>
+          </div>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Success rate</div>
+            <div><span class="dot" style="background:#3f6f9a"></span>Latency</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option K</div>
+          <h2>Radial clock</h2>
+          <div class="subtle">24h ring, quick scan for dips</div>
+          <div class="radial">
+            <svg viewBox="0 0 200 200" width="160" height="160" aria-hidden="true">
+              <circle cx="100" cy="100" r="72" stroke="#e5dacf" stroke-width="20" fill="none" />
+              <circle cx="100" cy="100" r="72" stroke="#5d8d7a" stroke-width="20" fill="none" stroke-dasharray="300 140" stroke-linecap="round" />
+              <circle cx="100" cy="100" r="52" stroke="#b84f61" stroke-width="12" fill="none" stroke-dasharray="110 180" stroke-linecap="round" />
+              <circle cx="100" cy="100" r="34" stroke="#c56a45" stroke-width="6" fill="none" stroke-dasharray="80 140" stroke-linecap="round" />
+              <circle cx="100" cy="100" r="6" fill="#3f6f9a" />
+            </svg>
+            <div>
+              <div class="subtle">Ring outer: success rate</div>
+              <div class="subtle">Ring inner: failure rate</div>
+              <div class="subtle">Thin ring: latency trend</div>
+              <div class="legend">
+                <div><span class="dot" style="background:#5d8d7a"></span>Success</div>
+                <div><span class="dot" style="background:#b84f61"></span>Failure</div>
+                <div><span class="dot" style="background:#c56a45"></span>Latency</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option L</div>
+          <h2>Baseline band + deviation bars</h2>
+          <div class="subtle">Focus on how far each hour deviates</div>
+          <svg viewBox="0 0 520 170" width="100%" height="170" aria-hidden="true">
+            <rect x="0" y="40" width="520" height="50" rx="12" fill="#e7ddd0" />
+            <rect x="0" y="52" width="520" height="26" rx="12" fill="#f4ece2" />
+            <g fill="#5d8d7a">
+              <rect x="12" y="30" width="12" height="40" rx="4" />
+              <rect x="36" y="36" width="12" height="34" rx="4" />
+              <rect x="60" y="26" width="12" height="44" rx="4" />
+              <rect x="84" y="42" width="12" height="28" rx="4" />
+              <rect x="108" y="20" width="12" height="50" rx="4" />
+              <rect x="132" y="46" width="12" height="24" rx="4" />
+              <rect x="156" y="32" width="12" height="38" rx="4" />
+              <rect x="180" y="28" width="12" height="42" rx="4" />
+              <rect x="204" y="44" width="12" height="26" rx="4" />
+              <rect x="228" y="24" width="12" height="46" rx="4" />
+              <rect x="252" y="38" width="12" height="32" rx="4" />
+              <rect x="276" y="30" width="12" height="40" rx="4" />
+              <rect x="300" y="46" width="12" height="24" rx="4" />
+              <rect x="324" y="26" width="12" height="44" rx="4" />
+              <rect x="348" y="40" width="12" height="30" rx="4" />
+              <rect x="372" y="34" width="12" height="36" rx="4" />
+              <rect x="396" y="48" width="12" height="22" rx="4" />
+              <rect x="420" y="28" width="12" height="42" rx="4" />
+              <rect x="444" y="42" width="12" height="28" rx="4" />
+              <rect x="468" y="36" width="12" height="34" rx="4" />
+              <rect x="492" y="44" width="12" height="26" rx="4" />
+            </g>
+            <polyline points="0,120 40,116 80,114 120,112 160,110 200,108 240,106 280,104 320,104 360,102 400,100 440,98 480,96 520,94" fill="none" stroke="#3f6f9a" stroke-width="3" />
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#5d8d7a"></span>Deviation bars</div>
+            <div><span class="dot" style="background:#3f6f9a"></span>Latency</div>
+          </div>
+        </section>
+
+        <section class="mockup dark-card">
+          <div class="badge">Option M</div>
+          <h2>Requests vs latency</h2>
+          <div class="subtle">Stacked bars for volume, p95 line overlay</div>
+          <svg viewBox="0 0 520 190" width="100%" height="190" aria-hidden="true">
+            <rect x="0" y="10" width="520" height="150" rx="12" fill="#1f2832" stroke="#2b3946" />
+            <g fill="#1f6fba">
+              <rect x="12" y="90" width="16" height="70" rx="4" />
+              <rect x="36" y="80" width="16" height="80" rx="4" />
+              <rect x="60" y="110" width="16" height="50" rx="4" />
+              <rect x="84" y="120" width="16" height="40" rx="4" />
+              <rect x="108" y="100" width="16" height="60" rx="4" />
+              <rect x="132" y="70" width="16" height="90" rx="4" />
+              <rect x="156" y="62" width="16" height="98" rx="4" />
+              <rect x="180" y="72" width="16" height="88" rx="4" />
+              <rect x="204" y="78" width="16" height="82" rx="4" />
+              <rect x="228" y="86" width="16" height="74" rx="4" />
+              <rect x="252" y="92" width="16" height="68" rx="4" />
+              <rect x="276" y="96" width="16" height="64" rx="4" />
+              <rect x="300" y="90" width="16" height="70" rx="4" />
+              <rect x="324" y="82" width="16" height="78" rx="4" />
+              <rect x="348" y="76" width="16" height="84" rx="4" />
+              <rect x="372" y="72" width="16" height="88" rx="4" />
+              <rect x="396" y="80" width="16" height="80" rx="4" />
+              <rect x="420" y="88" width="16" height="72" rx="4" />
+              <rect x="444" y="96" width="16" height="64" rx="4" />
+              <rect x="468" y="104" width="16" height="56" rx="4" />
+              <rect x="492" y="108" width="16" height="52" rx="4" />
+            </g>
+            <g fill="#e25a4f">
+              <rect x="12" y="82" width="16" height="8" rx="4" />
+              <rect x="36" y="72" width="16" height="8" rx="4" />
+              <rect x="132" y="62" width="16" height="8" rx="4" />
+              <rect x="180" y="64" width="16" height="8" rx="4" />
+              <rect x="372" y="64" width="16" height="8" rx="4" />
+              <rect x="420" y="80" width="16" height="8" rx="4" />
+            </g>
+            <polyline points="0,70 40,64 80,68 120,60 160,54 200,58 240,52 280,46 320,44 360,50 400,46 440,42 480,48 520,44" fill="none" stroke="#2bd4f5" stroke-width="3" />
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#1f6fba"></span>Success</div>
+            <div><span class="dot" style="background:#e25a4f"></span>Failure</div>
+            <div><span class="dot" style="background:#2bd4f5"></span>p95 latency</div>
+          </div>
+        </section>
+
+        <section class="mockup">
+          <div class="badge">Option N</div>
+          <h2>Latency vs traffic intensity (light)</h2>
+          <div class="subtle">Heatmap volume with latency line</div>
+          <svg viewBox="0 0 520 200" width="100%" height="200" aria-hidden="true">
+            <rect x="0" y="10" width="520" height="160" rx="12" fill="#f6efe7" stroke="#e5dacf" />
+            <g fill="#2b6da7" opacity="0.9">
+              <rect x="10" y="130" width="22" height="30" rx="4" />
+              <rect x="36" y="120" width="22" height="40" rx="4" />
+              <rect x="62" y="110" width="22" height="50" rx="4" />
+              <rect x="88" y="100" width="22" height="60" rx="4" />
+              <rect x="114" y="90" width="22" height="70" rx="4" />
+              <rect x="140" y="78" width="22" height="82" rx="4" />
+              <rect x="166" y="70" width="22" height="90" rx="4" />
+              <rect x="192" y="74" width="22" height="86" rx="4" />
+              <rect x="218" y="82" width="22" height="78" rx="4" />
+              <rect x="244" y="90" width="22" height="70" rx="4" />
+              <rect x="270" y="82" width="22" height="78" rx="4" />
+              <rect x="296" y="70" width="22" height="90" rx="4" />
+              <rect x="322" y="74" width="22" height="86" rx="4" />
+              <rect x="348" y="86" width="22" height="74" rx="4" />
+              <rect x="374" y="98" width="22" height="62" rx="4" />
+              <rect x="400" y="112" width="22" height="48" rx="4" />
+              <rect x="426" y="126" width="22" height="34" rx="4" />
+              <rect x="452" y="138" width="22" height="22" rx="4" />
+              <rect x="478" y="144" width="22" height="16" rx="4" />
+            </g>
+            <g fill="#5fa3da" opacity="0.6">
+              <rect x="10" y="150" width="22" height="10" rx="4" />
+              <rect x="36" y="148" width="22" height="12" rx="4" />
+              <rect x="62" y="144" width="22" height="16" rx="4" />
+              <rect x="88" y="140" width="22" height="20" rx="4" />
+              <rect x="114" y="132" width="22" height="28" rx="4" />
+              <rect x="140" y="124" width="22" height="36" rx="4" />
+              <rect x="166" y="122" width="22" height="38" rx="4" />
+              <rect x="192" y="126" width="22" height="34" rx="4" />
+              <rect x="218" y="132" width="22" height="28" rx="4" />
+              <rect x="244" y="138" width="22" height="22" rx="4" />
+              <rect x="270" y="134" width="22" height="26" rx="4" />
+              <rect x="296" y="124" width="22" height="36" rx="4" />
+              <rect x="322" y="128" width="22" height="32" rx="4" />
+              <rect x="348" y="136" width="22" height="24" rx="4" />
+              <rect x="374" y="144" width="22" height="16" rx="4" />
+              <rect x="400" y="150" width="22" height="10" rx="4" />
+              <rect x="426" y="154" width="22" height="6" rx="4" />
+              <rect x="452" y="156" width="22" height="4" rx="4" />
+              <rect x="478" y="156" width="22" height="4" rx="4" />
+            </g>
+            <g fill="#c76a43">
+              <rect x="166" y="150" width="22" height="10" rx="4" />
+              <rect x="296" y="148" width="22" height="12" rx="4" />
+              <rect x="348" y="146" width="22" height="14" rx="4" />
+            </g>
+            <polyline points="0,132 40,126 80,120 120,110 160,100 200,108 240,96 280,92 320,86 360,96 400,104 440,112 480,118 520,120" fill="none" stroke="#2aaed3" stroke-width="3" />
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#2b6da7"></span>Volume</div>
+            <div><span class="dot" style="background:#c76a43"></span>Failure spikes</div>
+            <div><span class="dot" style="background:#2aaed3"></span>p95 latency</div>
+          </div>
+        </section>
+
+        <section class="mockup dark-card">
+          <div class="badge">Option O</div>
+          <h2>Depth bars + latency ribbon</h2>
+          <div class="subtle">Depth bars show total load, ribbon highlights latency</div>
+          <svg viewBox="0 0 520 190" width="100%" height="190" aria-hidden="true">
+            <rect x="0" y="12" width="520" height="150" rx="12" fill="#1f2832" stroke="#2b3946" />
+            <g fill="#1f6fba">
+              <rect x="12" y="118" width="18" height="44" rx="4" />
+              <rect x="36" y="108" width="18" height="54" rx="4" />
+              <rect x="60" y="102" width="18" height="60" rx="4" />
+              <rect x="84" y="90" width="18" height="72" rx="4" />
+              <rect x="108" y="80" width="18" height="82" rx="4" />
+              <rect x="132" y="72" width="18" height="90" rx="4" />
+              <rect x="156" y="64" width="18" height="98" rx="4" />
+              <rect x="180" y="62" width="18" height="100" rx="4" />
+              <rect x="204" y="66" width="18" height="96" rx="4" />
+              <rect x="228" y="74" width="18" height="88" rx="4" />
+              <rect x="252" y="80" width="18" height="82" rx="4" />
+              <rect x="276" y="72" width="18" height="90" rx="4" />
+              <rect x="300" y="64" width="18" height="98" rx="4" />
+              <rect x="324" y="70" width="18" height="92" rx="4" />
+              <rect x="348" y="80" width="18" height="82" rx="4" />
+              <rect x="372" y="92" width="18" height="70" rx="4" />
+              <rect x="396" y="104" width="18" height="58" rx="4" />
+              <rect x="420" y="114" width="18" height="48" rx="4" />
+              <rect x="444" y="122" width="18" height="40" rx="4" />
+              <rect x="468" y="128" width="18" height="34" rx="4" />
+              <rect x="492" y="132" width="18" height="30" rx="4" />
+            </g>
+            <path d="M0 70 L40 66 L80 64 L120 60 L160 58 L200 62 L240 58 L280 54 L320 50 L360 56 L400 60 L440 64 L480 66 L520 68 L520 80 L0 80 Z" fill="#2bd4f5" opacity="0.2" />
+            <polyline points="0,70 40,66 80,64 120,60 160,58 200,62 240,58 280,54 320,50 360,56 400,60 440,64 480,66 520,68" fill="none" stroke="#2bd4f5" stroke-width="3" />
+          </svg>
+          <div class="legend">
+            <div><span class="dot" style="background:#1f6fba"></span>Volume</div>
+            <div><span class="dot" style="background:#2bd4f5"></span>Latency ribbon</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </body>
+</html>

@@ -39,7 +39,7 @@ events:
       successTable: accounts_in_success
       failureTable: accounts_in_failure
     - key: transfers.in
-      name: TransferCompleted
+      generatedAt generatedAt generatedAt genegeneratedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt ratedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt name: TransferCompleted
       category: Transfers / Payments
       successTable: transfers_in_success
       failureTable: transfers_in_failure
@@ -56,3 +56,4 @@ aggregation:
     intervalsMinutes: [60, 15]
   warmup:
     enabled: true
+    refreshTodayDelayMs: 60000

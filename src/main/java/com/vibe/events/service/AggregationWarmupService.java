@@ -9,6 +9,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +39,7 @@ public class AggregationWarmupService {
     }
   }
 
-  @Scheduled(fixedDelay = 60000)
+  @Scheduled(fixedDelayString = "${aggregation.warmup.refreshTodayDelayMs:60000}")
   public void refreshToday() {
     LocalDate today = LocalDate.now();
     refreshDay(today);
@@ -47,6 +49,16 @@ public class AggregationWarmupService {
   public void refreshYesterdayHourly() {
     LocalDate yesterday = LocalDate.now().minusDays(1);
     refreshDay(yesterday);
+  }
+
+  @Async("refreshExecutor")
+  public CompletableFuture<Void> refreshRecentDays(int days) {
+    int count = days <= 0 ? properties.getCache().getDaysToKeep() : days;
+    LocalDate today = LocalDate.now();
+    for (int i = 0; i < count; i += 1) {
+      refreshDay(today.minusDays(i));
+    }
+    return CompletableFuture.completedFuture(null);
   }
 
   private void refreshDay(LocalDate day) {

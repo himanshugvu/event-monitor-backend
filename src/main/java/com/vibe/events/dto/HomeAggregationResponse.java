@@ -5,4 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record HomeAggregationResponse(
-    LocalDate day, LocalDateTime generatedAt, Kpis kpis, List<EventBreakdownRow> events) {}
+    LocalDate day,
+    LocalDateTime generatedAt,
+    Kpis kpis,
+    LatencyStages stageLatencies,
+    List<EventBreakdownRow> events) {}
