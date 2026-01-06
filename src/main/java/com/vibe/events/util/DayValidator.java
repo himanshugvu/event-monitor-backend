@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public final class DayValidator {
   private static final Pattern PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
-  private static final Pattern TIME_PATTERN = Pattern.compile("^\\d{2}:\\d{2}$");
+  private static final Pattern TIME_PATTERN = Pattern.compile("^\\d{2}:\\d{2}(:\\d{2})?$");
 
   private DayValidator() {}
 
@@ -28,7 +28,7 @@ public final class DayValidator {
       return null;
     }
     if (!TIME_PATTERN.matcher(time).matches()) {
-      throw new BadRequestException("Invalid time format, expected HH:mm.");
+      throw new BadRequestException("Invalid time format, expected HH:mm or HH:mm:ss.");
     }
     try {
       return LocalTime.parse(time);
