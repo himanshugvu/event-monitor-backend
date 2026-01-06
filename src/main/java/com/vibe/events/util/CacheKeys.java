@@ -16,4 +16,8 @@ public final class CacheKeys {
   public static String eventBucketsKey(LocalDate day, String eventKey, int intervalMinutes) {
     return day + "|" + eventKey + "|" + intervalMinutes;
   }
+
+  public static String homeBucketsKey(LocalDate day, int intervalMinutes) {
+    return day + "|" + intervalMinutes;
+  }
 }

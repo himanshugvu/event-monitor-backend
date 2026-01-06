@@ -5,6 +5,7 @@ import com.vibe.events.config.CacheConfig;
 import com.vibe.events.dto.BucketPoint;
 import com.vibe.events.dto.EventBreakdownRow;
 import com.vibe.events.dto.EventBucketsResponse;
+import com.vibe.events.dto.HomeBucketsResponse;
 import com.vibe.events.dto.EventSummaryResponse;
 import com.vibe.events.dto.HomeAggregationResponse;
 import com.vibe.events.dto.Kpis;
@@ -68,6 +69,23 @@ public class AggregationService {
     return response;
   }
 
+  public HomeBucketsResponse getHomeBuckets(LocalDate day, int intervalMinutes) {
+    validateInterval(intervalMinutes);
+    String key = CacheKeys.homeBucketsKey(day, intervalMinutes);
+    Cache cache = cacheManager.getCache(CacheConfig.HOME_BUCKETS);
+    if (cache != null) {
+      HomeBucketsResponse cached = cache.get(key, HomeBucketsResponse.class);
+      if (cached != null) {
+        return cached;
+      }
+    }
+    HomeBucketsResponse response = computeHomeBuckets(day, intervalMinutes);
+    if (cache != null) {
+      cache.put(key, response);
+    }
+    return response;
+  }
+
   public EventSummaryResponse getEventSummary(LocalDate day, String eventKey) {
     String key = CacheKeys.eventSummaryKey(day, eventKey);
     Cache cache = cacheManager.getCache(CacheConfig.EVENT_SUMMARY);
@@ -105,6 +123,14 @@ public class AggregationService {
     Cache cache = cacheManager.getCache(CacheConfig.HOME_AGG);
     if (cache != null) {
       cache.put(CacheKeys.homeKey(day), computeHomeAggregation(day));
+    }
+  }
+
+  public void refreshHomeBuckets(LocalDate day, int intervalMinutes) {
+    validateInterval(intervalMinutes);
+    Cache cache = cacheManager.getCache(CacheConfig.HOME_BUCKETS);
+    if (cache != null) {
+      cache.put(CacheKeys.homeBucketsKey(day, intervalMinutes), computeHomeBuckets(day, intervalMinutes));
     }
   }
 
@@ -151,11 +177,13 @@ public class AggregationService {
     double weightedLatencySum = 0.0;
     double weightedReceivedSum = 0.0;
     double weightedSentSum = 0.0;
+    int percentileBucketMs = properties.getPercentileBucketMs();
+    int percentileSampleSize = properties.getPercentileSampleSizePerTable();
     List<String> latencyTables = new ArrayList<>();
     List<String> successTables = new ArrayList<>();
 
     for (EventDefinition definition : registry.all()) {
-      EventStats stats = computeEventStats(day, definition);
+      EventStats stats = computeEventStats(day, definition, false);
       String name = definition.getName();
       if (name == null || name.isBlank()) {
         name = definition.getKey();
@@ -179,23 +207,8 @@ public class AggregationService {
       totalFailure += stats.failure();
       totalRetriable += stats.retriableFailures();
       weightedLatencySum += stats.avgLatencyMs() * stats.total();
-      double avgReceivedSuccess =
-          toLatencyValue(
-              repository.loadAverageLatency(
-                  definition.getSuccessTable(), "latency_event_received_ms", day));
-      double avgReceivedFailure =
-          toLatencyValue(
-              repository.loadAverageLatency(
-                  definition.getFailureTable(), "latency_event_received_ms", day));
-      weightedReceivedSum += avgReceivedSuccess * stats.success();
-      weightedReceivedSum += avgReceivedFailure * stats.failure();
-      if (stats.success() > 0) {
-        double avgSentSuccess =
-            toLatencyValue(
-                repository.loadAverageLatency(
-                    definition.getSuccessTable(), "latency_event_sent_ms", day));
-        weightedSentSum += avgSentSuccess * stats.success();
-      }
+      weightedReceivedSum += stats.avgReceivedLatencyMs() * stats.total();
+      weightedSentSum += stats.avgSentLatencyMs() * stats.success();
       latencyTables.add(definition.getSuccessTable());
       latencyTables.add(definition.getFailureTable());
       successTables.add(definition.getSuccessTable());
@@ -205,30 +218,25 @@ public class AggregationService {
     double avgLatency = total > 0 ? weightedLatencySum / total : 0.0;
     double avgReceived = total > 0 ? weightedReceivedSum / total : 0.0;
     double avgSent = totalSuccess > 0 ? weightedSentSum / totalSuccess : 0.0;
-    Double p95Latency =
-        repository.loadLatencyPercentileAcrossTables(
-            latencyTables, "latency_ms", day, total, 0.95);
-    Double p99Latency =
-        repository.loadLatencyPercentileAcrossTables(
-            latencyTables, "latency_ms", day, total, 0.99);
-    Double maxLatency =
-        repository.loadMaxLatencyAcrossTables(latencyTables, "latency_ms", day);
-    Double p95Received =
-        repository.loadLatencyPercentileAcrossTables(
-            latencyTables, "latency_event_received_ms", day, total, 0.95);
-    Double p99Received =
-        repository.loadLatencyPercentileAcrossTables(
-            latencyTables, "latency_event_received_ms", day, total, 0.99);
-    Double maxReceived =
-        repository.loadMaxLatencyAcrossTables(latencyTables, "latency_event_received_ms", day);
-    Double p95Sent =
-        repository.loadLatencyPercentileAcrossTables(
-            successTables, "latency_event_sent_ms", day, totalSuccess, 0.95);
-    Double p99Sent =
-        repository.loadLatencyPercentileAcrossTables(
-            successTables, "latency_event_sent_ms", day, totalSuccess, 0.99);
-    Double maxSent =
-        repository.loadMaxLatencyAcrossTables(successTables, "latency_event_sent_ms", day);
+    AggregationRepository.LatencyStats latencyStats =
+        repository.loadLatencyStatsAcrossTables(
+            latencyTables, "latency_ms", day, total, percentileBucketMs, percentileSampleSize);
+    AggregationRepository.LatencyStats receivedStats =
+        repository.loadLatencyStatsAcrossTables(
+            latencyTables,
+            "latency_event_received_ms",
+            day,
+            total,
+            percentileBucketMs,
+            percentileSampleSize);
+    AggregationRepository.LatencyStats sentStats =
+        repository.loadLatencyStatsAcrossTables(
+            successTables,
+            "latency_event_sent_ms",
+            day,
+            totalSuccess,
+            percentileBucketMs,
+            percentileSampleSize);
     Kpis kpis =
         new Kpis(
             total,
@@ -237,19 +245,19 @@ public class AggregationService {
             round2(successRate(totalSuccess, total)),
             totalRetriable,
             round2(avgLatency),
-            round2(p95Latency == null ? 0.0 : p95Latency),
-            round2(p99Latency == null ? 0.0 : p99Latency),
-            round2(maxLatency == null ? 0.0 : maxLatency));
+            round2(latencyStats.p95() == null ? 0.0 : latencyStats.p95()),
+            round2(latencyStats.p99() == null ? 0.0 : latencyStats.p99()),
+            round2(latencyStats.max() == null ? 0.0 : latencyStats.max()));
     LatencyStages stageLatencies =
         new LatencyStages(
             round2(avgReceived),
-            round2(p95Received == null ? 0.0 : p95Received),
-            round2(p99Received == null ? 0.0 : p99Received),
-            round2(maxReceived == null ? 0.0 : maxReceived),
+            round2(receivedStats.p95() == null ? 0.0 : receivedStats.p95()),
+            round2(receivedStats.p99() == null ? 0.0 : receivedStats.p99()),
+            round2(receivedStats.max() == null ? 0.0 : receivedStats.max()),
             round2(avgSent),
-            round2(p95Sent == null ? 0.0 : p95Sent),
-            round2(p99Sent == null ? 0.0 : p99Sent),
-            round2(maxSent == null ? 0.0 : maxSent));
+            round2(sentStats.p95() == null ? 0.0 : sentStats.p95()),
+            round2(sentStats.p99() == null ? 0.0 : sentStats.p99()),
+            round2(sentStats.max() == null ? 0.0 : sentStats.max()));
 
     HomeAggregationResponse response =
         new HomeAggregationResponse(day, LocalDateTime.now(), kpis, stageLatencies, eventRows);
@@ -257,10 +265,89 @@ public class AggregationService {
     return response;
   }
 
+  private HomeBucketsResponse computeHomeBuckets(LocalDate day, int intervalMinutes) {
+    long start = System.currentTimeMillis();
+    int bucketCount = Math.max(1, (24 * 60) / intervalMinutes);
+    List<BucketPoint> aggregated = new ArrayList<>(bucketCount);
+    long[] successCounts = new long[bucketCount];
+    long[] failureCounts = new long[bucketCount];
+    long[] retriableCounts = new long[bucketCount];
+    double[] weightedLatency = new double[bucketCount];
+    long[] weightedSuccess = new long[bucketCount];
+    List<List<String>> failureSources = new ArrayList<>(bucketCount);
+    for (int i = 0; i < bucketCount; i += 1) {
+      failureSources.add(new ArrayList<>());
+    }
+
+    for (EventDefinition definition : registry.all()) {
+      String label = definition.getName();
+      if (label == null || label.isBlank()) {
+        label = definition.getKey();
+      }
+      List<BucketPoint> buckets;
+      if (intervalMinutes == 60) {
+        Map<Integer, SuccessBucket> successBuckets =
+            repository.loadHourlySuccessBuckets(definition.getSuccessTable(), day);
+        Map<Integer, FailureBucket> failureBuckets =
+            repository.loadHourlyFailureBuckets(definition.getFailureTable(), day);
+        buckets = buildHourlyBuckets(day, successBuckets, failureBuckets);
+      } else {
+        Map<BucketKey, SuccessBucket> successBuckets =
+            repository.loadQuarterHourSuccessBuckets(definition.getSuccessTable(), day);
+        Map<BucketKey, FailureBucket> failureBuckets =
+            repository.loadQuarterHourFailureBuckets(definition.getFailureTable(), day);
+        buckets = buildQuarterHourBuckets(day, successBuckets, failureBuckets);
+      }
+      int limit = Math.min(bucketCount, buckets.size());
+      for (int i = 0; i < limit; i += 1) {
+        BucketPoint bucket = buckets.get(i);
+        successCounts[i] += bucket.success();
+        failureCounts[i] += bucket.failure();
+        retriableCounts[i] += bucket.retriableFailures();
+        if (bucket.success() > 0) {
+          weightedLatency[i] += bucket.avgLatencyMs() * bucket.success();
+          weightedSuccess[i] += bucket.success();
+        }
+        if (bucket.failure() > 0) {
+          failureSources.get(i).add(label);
+        }
+      }
+    }
+
+    LocalDateTime startTime = day.atStartOfDay();
+    for (int i = 0; i < bucketCount; i += 1) {
+      long success = successCounts[i];
+      long failure = failureCounts[i];
+      long total = success + failure;
+      double avgLatency = weightedSuccess[i] > 0 ? weightedLatency[i] / weightedSuccess[i] : 0.0;
+      double successRate = total > 0 ? (success * 100.0) / total : 0.0;
+      List<String> sources = failureSources.get(i);
+      aggregated.add(
+          new BucketPoint(
+              startTime.plusMinutes((long) intervalMinutes * i),
+              success,
+              failure,
+              total,
+              round2(successRate),
+              retriableCounts[i],
+              round2(avgLatency),
+              sources.isEmpty() ? null : List.copyOf(sources)));
+    }
+
+    HomeBucketsResponse response =
+        new HomeBucketsResponse(day, intervalMinutes, LocalDateTime.now(), aggregated);
+    log.info(
+        "Computed home buckets for day {} interval {} in {}ms",
+        day,
+        intervalMinutes,
+        System.currentTimeMillis() - start);
+    return response;
+  }
+
   private EventSummaryResponse computeEventSummary(LocalDate day, String eventKey) {
     long start = System.currentTimeMillis();
     EventDefinition definition = registry.getRequired(eventKey);
-    EventStats stats = computeEventStats(day, definition);
+    EventStats stats = computeEventStats(day, definition, true);
     Kpis kpis =
         new Kpis(
             stats.total(),
@@ -312,37 +399,44 @@ public class AggregationService {
     return response;
   }
 
-  private EventStats computeEventStats(LocalDate day, EventDefinition definition) {
-    SuccessTotals successTotals =
-        repository.loadSuccessTotals(definition.getSuccessTable(), day);
-    FailureTotals failureTotals =
-        repository.loadFailureTotals(definition.getFailureTable(), day);
+  private EventStats computeEventStats(
+      LocalDate day, EventDefinition definition, boolean includePercentiles) {
+    SuccessTotals successTotals = repository.loadSuccessTotals(definition.getSuccessTable(), day);
+    FailureTotals failureTotals = repository.loadFailureTotals(definition.getFailureTable(), day);
     long success = successTotals.successCount();
     long failure = failureTotals.failureCount();
     long total = success + failure;
-    double successLatency = successTotals.avgLatencyMs() == null ? 0.0 : successTotals.avgLatencyMs();
-    double failureLatency = failureTotals.avgLatencyMs() == null ? 0.0 : failureTotals.avgLatencyMs();
+    double successLatency = toLatencyValue(successTotals.avgLatencyMs());
+    double failureLatency = toLatencyValue(failureTotals.avgLatencyMs());
     double avgLatency =
         total > 0 ? (successLatency * success + failureLatency * failure) / total : 0.0;
-    Double p95Latency =
-        repository.loadLatencyPercentileAcrossTables(
+    double successReceived = toLatencyValue(successTotals.avgReceivedLatencyMs());
+    double failureReceived = toLatencyValue(failureTotals.avgReceivedLatencyMs());
+    double avgReceived =
+        total > 0 ? (successReceived * success + failureReceived * failure) / total : 0.0;
+    double avgSent = success > 0 ? toLatencyValue(successTotals.avgSentLatencyMs()) : 0.0;
+    if (!includePercentiles) {
+      return new EventStats(
+          total,
+          success,
+          failure,
+          successRate(success, total),
+          failureTotals.retriableCount(),
+          avgLatency,
+          avgReceived,
+          avgSent,
+          0.0,
+          0.0,
+          0.0);
+    }
+    AggregationRepository.LatencyStats latencyStats =
+        repository.loadLatencyStatsAcrossTables(
             List.of(definition.getSuccessTable(), definition.getFailureTable()),
             "latency_ms",
             day,
             total,
-            0.95);
-    Double p99Latency =
-        repository.loadLatencyPercentileAcrossTables(
-            List.of(definition.getSuccessTable(), definition.getFailureTable()),
-            "latency_ms",
-            day,
-            total,
-            0.99);
-    Double maxLatency =
-        repository.loadMaxLatencyAcrossTables(
-            List.of(definition.getSuccessTable(), definition.getFailureTable()),
-            "latency_ms",
-            day);
+            properties.getPercentileBucketMs(),
+            properties.getPercentileSampleSizePerTable());
     return new EventStats(
         total,
         success,
@@ -350,91 +444,42 @@ public class AggregationService {
         successRate(success, total),
         failureTotals.retriableCount(),
         avgLatency,
-        p95Latency == null ? 0.0 : p95Latency,
-        p99Latency == null ? 0.0 : p99Latency,
-        maxLatency == null ? 0.0 : maxLatency);
+        avgReceived,
+        avgSent,
+        latencyStats.p95() == null ? 0.0 : latencyStats.p95(),
+        latencyStats.p99() == null ? 0.0 : latencyStats.p99(),
+        latencyStats.max() == null ? 0.0 : latencyStats.max());
   }
 
   private LatencyStages buildStageLatencies(
       EventDefinition definition, EventStats stats, LocalDate day) {
-    double successReceived =
-        toLatencyValue(
-            repository.loadAverageLatency(
-                definition.getSuccessTable(), "latency_event_received_ms", day));
-    double failureReceived =
-        toLatencyValue(
-            repository.loadAverageLatency(
-                definition.getFailureTable(), "latency_event_received_ms", day));
-    double avgReceived =
-        stats.total() > 0
-            ? (successReceived * stats.success() + failureReceived * stats.failure())
-                / stats.total()
-            : 0.0;
-    double avgSent =
-        stats.success() > 0
-            ? toLatencyValue(
-                repository.loadAverageLatency(
-                    definition.getSuccessTable(), "latency_event_sent_ms", day))
-            : 0.0;
-    double p95Received =
-        toLatencyValue(
-            repository.loadLatencyPercentileAcrossTables(
-                List.of(definition.getSuccessTable(), definition.getFailureTable()),
-                "latency_event_received_ms",
-                day,
-                stats.total(),
-                0.95));
-    double p99Received =
-        toLatencyValue(
-            repository.loadLatencyPercentileAcrossTables(
-                List.of(definition.getSuccessTable(), definition.getFailureTable()),
-                "latency_event_received_ms",
-                day,
-                stats.total(),
-                0.99));
-    double maxReceived =
-        toLatencyValue(
-            repository.loadMaxLatencyAcrossTables(
-                List.of(definition.getSuccessTable(), definition.getFailureTable()),
-                "latency_event_received_ms",
-                day));
-    double p95Sent =
-        stats.success() > 0
-            ? toLatencyValue(
-                repository.loadLatencyPercentileAcrossTables(
-                    List.of(definition.getSuccessTable()),
-                    "latency_event_sent_ms",
-                    day,
-                    stats.success(),
-                    0.95))
-            : 0.0;
-    double p99Sent =
-        stats.success() > 0
-            ? toLatencyValue(
-                repository.loadLatencyPercentileAcrossTables(
-                    List.of(definition.getSuccessTable()),
-                    "latency_event_sent_ms",
-                    day,
-                    stats.success(),
-                    0.99))
-            : 0.0;
-    double maxSent =
-        stats.success() > 0
-            ? toLatencyValue(
-                repository.loadMaxLatencyAcrossTables(
-                    List.of(definition.getSuccessTable()),
-                    "latency_event_sent_ms",
-                    day))
-            : 0.0;
+    double avgReceived = stats.avgReceivedLatencyMs();
+    double avgSent = stats.avgSentLatencyMs();
+    AggregationRepository.LatencyStats receivedStats =
+        repository.loadLatencyStatsAcrossTables(
+            List.of(definition.getSuccessTable(), definition.getFailureTable()),
+            "latency_event_received_ms",
+            day,
+            stats.total(),
+            properties.getPercentileBucketMs(),
+            properties.getPercentileSampleSizePerTable());
+    AggregationRepository.LatencyStats sentStats =
+        repository.loadLatencyStatsAcrossTables(
+            List.of(definition.getSuccessTable()),
+            "latency_event_sent_ms",
+            day,
+            stats.success(),
+            properties.getPercentileBucketMs(),
+            properties.getPercentileSampleSizePerTable());
     return new LatencyStages(
         round2(avgReceived),
-        round2(p95Received),
-        round2(p99Received),
-        round2(maxReceived),
+        round2(toLatencyValue(receivedStats.p95())),
+        round2(toLatencyValue(receivedStats.p99())),
+        round2(toLatencyValue(receivedStats.max())),
         round2(avgSent),
-        round2(p95Sent),
-        round2(p99Sent),
-        round2(maxSent));
+        round2(toLatencyValue(sentStats.p95())),
+        round2(toLatencyValue(sentStats.p99())),
+        round2(toLatencyValue(sentStats.max())));
   }
 
   private List<BucketPoint> buildHourlyBuckets(
@@ -495,7 +540,8 @@ public class AggregationService {
         total,
         round2(successRate(success, total)),
         retriable,
-        round2(avgLatency));
+        round2(avgLatency),
+        null);
   }
 
   private void validateInterval(int intervalMinutes) {
@@ -523,6 +569,8 @@ public class AggregationService {
       double successRate,
       long retriableFailures,
       double avgLatencyMs,
+      double avgReceivedLatencyMs,
+      double avgSentLatencyMs,
       double p95LatencyMs,
       double p99LatencyMs,
       double maxLatencyMs) {}

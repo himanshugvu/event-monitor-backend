@@ -6,47 +6,63 @@ import com.vibe.events.registry.EventRegistry;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import java.util.concurrent.CompletableFuture;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnProperty(prefix = "aggregation.warmup", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AggregationWarmupService {
   private static final Logger log = LoggerFactory.getLogger(AggregationWarmupService.class);
 
   private final AggregationService aggregationService;
   private final EventRegistry registry;
   private final AggregationProperties properties;
+  private final ThreadPoolTaskExecutor refreshExecutor;
 
   public AggregationWarmupService(
       AggregationService aggregationService,
       EventRegistry registry,
-      AggregationProperties properties) {
+      AggregationProperties properties,
+      ThreadPoolTaskExecutor refreshExecutor) {
     this.aggregationService = aggregationService;
     this.registry = registry;
     this.properties = properties;
+    this.refreshExecutor = refreshExecutor;
   }
 
-  @jakarta.annotation.PostConstruct
+  @EventListener(ApplicationReadyEvent.class)
   public void warmupStartup() {
-    for (LocalDate day : daysToWarm()) {
-      refreshDay(day);
+    if (!properties.getWarmup().isEnabled()) {
+      return;
     }
+    refreshExecutor.execute(
+        () -> {
+          for (LocalDate day : daysToWarm()) {
+            refreshDay(day);
+          }
+        });
   }
 
   @Scheduled(fixedDelayString = "${aggregation.warmup.refreshTodayDelayMs:60000}")
   public void refreshToday() {
+    if (!properties.getWarmup().isEnabled()) {
+      return;
+    }
     LocalDate today = LocalDate.now();
     refreshDay(today);
   }
 
   @Scheduled(cron = "0 0 * * * *")
   public void refreshYesterdayHourly() {
+    if (!properties.getWarmup().isEnabled()) {
+      return;
+    }
     LocalDate yesterday = LocalDate.now().minusDays(1);
     refreshDay(yesterday);
   }

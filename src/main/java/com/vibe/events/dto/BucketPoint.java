@@ -1,6 +1,7 @@
 package com.vibe.events.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record BucketPoint(
     LocalDateTime bucketStart,
@@ -9,4 +10,5 @@ public record BucketPoint(
     long total,
     double successRate,
     long retriableFailures,
-    double avgLatencyMs) {}
+    double avgLatencyMs,
+    List<String> failureSources) {}

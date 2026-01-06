@@ -1,6 +1,7 @@
 package com.vibe.events.controller;
 
 import com.vibe.events.dto.HomeAggregationResponse;
+import com.vibe.events.dto.HomeBucketsResponse;
 import com.vibe.events.service.AggregationService;
 import com.vibe.events.util.DayValidator;
 import java.time.LocalDate;
@@ -28,5 +29,17 @@ public class HomeAggregationController {
       aggregationService.refreshHome(parsedDay);
     }
     return aggregationService.getHomeAggregation(parsedDay);
+  }
+
+  @GetMapping("/home/buckets")
+  public HomeBucketsResponse getHomeBuckets(
+      @PathVariable String day,
+      @RequestParam(defaultValue = "60") int intervalMinutes,
+      @RequestParam(defaultValue = "false") boolean refresh) {
+    LocalDate parsedDay = DayValidator.parseDay(day);
+    if (refresh) {
+      aggregationService.refreshHomeBuckets(parsedDay, intervalMinutes);
+    }
+    return aggregationService.getHomeBuckets(parsedDay, intervalMinutes);
   }
 }

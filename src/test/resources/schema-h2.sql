@@ -5,8 +5,7 @@ DROP TABLE IF EXISTS loans_in_success;
 
 CREATE TABLE payments_in_success (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  event_date DATE NOT NULL,
-  event_date_time DATETIME NOT NULL,
+  event_datetime DATETIME NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
@@ -27,8 +26,7 @@ CREATE TABLE payments_in_success (
 
 CREATE TABLE payments_in_failure (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  event_date DATE NOT NULL,
-  event_date_time DATETIME NOT NULL,
+  event_datetime DATETIME NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
@@ -53,8 +51,7 @@ CREATE TABLE payments_in_failure (
 
 CREATE TABLE loans_in_success (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  event_date DATE NOT NULL,
-  event_date_time DATETIME NOT NULL,
+  event_datetime DATETIME NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
@@ -75,8 +72,7 @@ CREATE TABLE loans_in_success (
 
 CREATE TABLE loans_in_failure (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  event_date DATE NOT NULL,
-  event_date_time DATETIME NOT NULL,
+  event_datetime DATETIME NOT NULL,
   event_trace_id VARCHAR(64),
   account_number VARCHAR(64),
   customer_type VARCHAR(32),
@@ -98,3 +94,4 @@ CREATE TABLE loans_in_failure (
   retriable TINYINT,
   retry_attempt INT
 );
+

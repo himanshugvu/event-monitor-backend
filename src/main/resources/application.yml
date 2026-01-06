@@ -52,6 +52,8 @@ events:
 aggregation:
   cache:
     daysToKeep: 7
+  percentileBucketMs: 0
+  percentileSampleSizePerTable: 20000
   buckets:
     intervalsMinutes: [60, 15]
   warmup:

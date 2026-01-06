@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class CacheConfig {
   public static final String HOME_AGG = "homeAgg";
+  public static final String HOME_BUCKETS = "homeBuckets";
   public static final String EVENT_SUMMARY = "eventSummary";
   public static final String EVENT_BUCKETS = "eventBuckets";
 
@@ -28,6 +29,8 @@ public class CacheConfig {
 
     manager.registerCustomCache(
         HOME_AGG, buildCache(Duration.ofDays(daysToKeep), 32));
+    manager.registerCustomCache(
+        HOME_BUCKETS, buildCache(Duration.ofDays(daysToKeep), daysToKeep * intervalCount));
     manager.registerCustomCache(
         EVENT_SUMMARY,
         buildCache(Duration.ofDays(daysToKeep), eventCount * daysToKeep));

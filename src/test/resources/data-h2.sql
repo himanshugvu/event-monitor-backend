@@ -1,9 +1,8 @@
 INSERT INTO payments_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -17,19 +16,18 @@ INSERT INTO payments_in_success (
   target_partition_id,
   target_offset
 ) VALUES
-  (CURRENT_DATE, 'pay-trace-1', 'ACC-1001', 'RETAIL', DATEADD('SECOND', 36000, CAST(CURRENT_DATE AS TIMESTAMP)),
+  ('pay-trace-1', 'ACC-1001', 'RETAIL', DATEADD('SECOND', 36000, CAST(CURRENT_DATE AS TIMESTAMP)),
    'payments.raw', 1, 100, 'pay-key-1', '{"amount":100}', '{"amount":100,"status":"ok"}',
    10000, 4000, 6000, 'payments.processed', 1, 200),
-  (CURRENT_DATE, 'pay-trace-2', 'ACC-1002', 'SMB', DATEADD('SECOND', 39600, CAST(CURRENT_DATE AS TIMESTAMP)),
+  ('pay-trace-2', 'ACC-1002', 'SMB', DATEADD('SECOND', 39600, CAST(CURRENT_DATE AS TIMESTAMP)),
    'payments.raw', 1, 101, 'pay-key-2', '{"amount":200}', '{"amount":200,"status":"ok"}',
    5000, 2000, 3000, 'payments.processed', 1, 201);
 
 INSERT INTO payments_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -47,17 +45,16 @@ INSERT INTO payments_in_failure (
   retriable,
   retry_attempt
 ) VALUES
-  (CURRENT_DATE, 'pay-f-1', 'ACC-1009', 'RETAIL', DATEADD('SECOND', 43200, CAST(CURRENT_DATE AS TIMESTAMP)),
+  ('pay-f-1', 'ACC-1009', 'RETAIL', DATEADD('SECOND', 43200, CAST(CURRENT_DATE AS TIMESTAMP)),
    'payments.raw', 1, 102, 'pay-key-3', '{"amount":90}', '{"amount":90}',
    3000, 3000, 'payments.processed', 1, 202,
    'TimeoutException', 'Downstream timeout', 'stack', 1, 0);
 
 INSERT INTO loans_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -71,16 +68,15 @@ INSERT INTO loans_in_success (
   target_partition_id,
   target_offset
 ) VALUES
-  (CURRENT_DATE, 'loan-trace-1', 'ACC-2001', 'RETAIL', DATEADD('SECOND', 33300, CAST(CURRENT_DATE AS TIMESTAMP)),
+  ('loan-trace-1', 'ACC-2001', 'RETAIL', DATEADD('SECOND', 33300, CAST(CURRENT_DATE AS TIMESTAMP)),
    'loans.raw', 2, 200, 'loan-key-1', '{"amount":1000}', '{"amount":1000,"status":"ok"}',
    2000, 800, 1200, 'loans.processed', 2, 300);
 
 INSERT INTO loans_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -98,11 +94,12 @@ INSERT INTO loans_in_failure (
   retriable,
   retry_attempt
 ) VALUES
-  (CURRENT_DATE, 'loan-f-1', 'ACC-2009', 'SMB', DATEADD('SECOND', 47400, CAST(CURRENT_DATE AS TIMESTAMP)),
+  ('loan-f-1', 'ACC-2009', 'SMB', DATEADD('SECOND', 47400, CAST(CURRENT_DATE AS TIMESTAMP)),
    'loans.raw', 2, 201, 'loan-key-2', '{"amount":500}', '{"amount":500}',
    1000, 1000, 'loans.processed', 2, 301,
    'ValidationException', 'Invalid loan', 'stack', 0, 1),
-  (CURRENT_DATE, 'loan-f-2', 'ACC-2010', 'SMB', DATEADD('SECOND', 50700, CAST(CURRENT_DATE AS TIMESTAMP)),
+  ('loan-f-2', 'ACC-2010', 'SMB', DATEADD('SECOND', 50700, CAST(CURRENT_DATE AS TIMESTAMP)),
    'loans.raw', 2, 202, 'loan-key-3', '{"amount":700}', '{"amount":700}',
    4000, 4000, 'loans.processed', 2, 302,
    'TimeoutException', 'Downstream timeout', 'stack', 1, 0);
+

@@ -54,11 +54,10 @@ CROSS JOIN (
 ) f;
 
 INSERT INTO payments_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -70,7 +69,6 @@ INSERT INTO payments_in_success (
   target_offset
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-payments-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -88,11 +86,10 @@ FROM seq
 WHERE n < 800000;
 
 INSERT INTO payments_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -109,7 +106,6 @@ INSERT INTO payments_in_failure (
   retry_attempt
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-payments-fail-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -137,11 +133,10 @@ FROM seq
 WHERE n < 200000;
 
 INSERT INTO loans_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -153,7 +148,6 @@ INSERT INTO loans_in_success (
   target_offset
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-loans-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -171,11 +165,10 @@ FROM seq
 WHERE n < 800000;
 
 INSERT INTO loans_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -192,7 +185,6 @@ INSERT INTO loans_in_failure (
   retry_attempt
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-loans-fail-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -220,11 +212,10 @@ FROM seq
 WHERE n < 200000;
 
 INSERT INTO cards_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -236,7 +227,6 @@ INSERT INTO cards_in_success (
   target_offset
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-cards-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -254,11 +244,10 @@ FROM seq
 WHERE n < 800000;
 
 INSERT INTO cards_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -275,7 +264,6 @@ INSERT INTO cards_in_failure (
   retry_attempt
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-cards-fail-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -303,11 +291,10 @@ FROM seq
 WHERE n < 200000;
 
 INSERT INTO accounts_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -319,7 +306,6 @@ INSERT INTO accounts_in_success (
   target_offset
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-accounts-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -337,11 +323,10 @@ FROM seq
 WHERE n < 800000;
 
 INSERT INTO accounts_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -358,7 +343,6 @@ INSERT INTO accounts_in_failure (
   retry_attempt
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-accounts-fail-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -386,11 +370,10 @@ FROM seq
 WHERE n < 200000;
 
 INSERT INTO transfers_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -402,7 +385,6 @@ INSERT INTO transfers_in_success (
   target_offset
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-transfers-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -420,11 +402,10 @@ FROM seq
 WHERE n < 800000;
 
 INSERT INTO transfers_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -441,7 +422,6 @@ INSERT INTO transfers_in_failure (
   retry_attempt
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-transfers-fail-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -469,11 +449,10 @@ FROM seq
 WHERE n < 200000;
 
 INSERT INTO alerts_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -485,7 +464,6 @@ INSERT INTO alerts_in_success (
   target_offset
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-alerts-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -503,11 +481,10 @@ FROM seq
 WHERE n < 800000;
 
 INSERT INTO alerts_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -524,7 +501,6 @@ INSERT INTO alerts_in_failure (
   retry_attempt
 )
 SELECT
-  CURDATE(),
   CONCAT('trace-alerts-fail-', LPAD(n, 6, '0')),
   CONCAT('ACC-', LPAD(n % 1000000, 6, '0')),
   CASE WHEN n % 3 = 0 THEN 'RETAIL' WHEN n % 3 = 1 THEN 'SMB' ELSE 'CORP' END,
@@ -552,3 +528,4 @@ FROM seq
 WHERE n < 200000;
 
 DROP TEMPORARY TABLE seq;
+

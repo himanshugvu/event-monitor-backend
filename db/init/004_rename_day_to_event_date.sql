@@ -1,20 +1,4 @@
-ALTER TABLE payments_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE payments_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE loans_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE loans_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE cards_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE cards_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE accounts_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE accounts_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE transfers_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE transfers_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE alerts_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE alerts_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE kyc_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE kyc_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE fraud_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE fraud_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE statements_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE statements_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE limits_in_success CHANGE COLUMN day event_date DATE NOT NULL;
-ALTER TABLE limits_in_failure CHANGE COLUMN day event_date DATE NOT NULL;
+-- No-op: event_date has been removed and event_datetime is now the canonical timestamp.
+-- For existing databases, migrate manually, for example:
+-- ALTER TABLE <table> CHANGE COLUMN event_date_time event_datetime DATETIME NOT NULL;
+-- ALTER TABLE <table> DROP COLUMN event_date;

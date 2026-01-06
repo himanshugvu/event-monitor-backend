@@ -1,9 +1,8 @@
 INSERT INTO payments_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -17,23 +16,22 @@ INSERT INTO payments_in_success (
   target_partition_id,
   target_offset
 ) VALUES
-  (CURDATE(), 'trace-pay-001', 'ACC-1001', 'RETAIL', TIMESTAMP(CURDATE(), '08:10:00'),
+  ('trace-pay-001', 'ACC-1001', 'RETAIL', TIMESTAMP(CURDATE(), '08:10:00'),
    'payments.raw', 1, 100, 'pay-key-1', '{"amount":100}', '{"amount":100,"status":"ok"}',
    5000, 2000, 3000, 'payments.processed', 2, 200),
-  (CURDATE(), 'trace-pay-002', 'ACC-1002', 'SMB', TIMESTAMP(CURDATE(), '09:15:00'),
+  ('trace-pay-002', 'ACC-1002', 'SMB', TIMESTAMP(CURDATE(), '09:15:00'),
    'payments.raw', 1, 101, 'pay-key-2', '{"amount":220}', '{"amount":220,"status":"ok"}',
    6000, 2500, 3500, 'payments.processed', 2, 201),
-  (DATE_SUB(CURDATE(), INTERVAL 1 event_date), 'trace-pay-003', 'ACC-1003', 'RETAIL',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '11:00:00'),
+  ('trace-pay-003', 'ACC-1003', 'RETAIL',
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '11:00:00'),
    'payments.raw', 1, 102, 'pay-key-3', '{"amount":45}', '{"amount":45,"status":"ok"}',
    4000, 1500, 2500, 'payments.processed', 2, 202);
 
 INSERT INTO payments_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -51,22 +49,21 @@ INSERT INTO payments_in_failure (
   retriable,
   retry_attempt
 ) VALUES
-  (CURDATE(), 'trace-pay-004', 'ACC-1004', 'RETAIL', TIMESTAMP(CURDATE(), '10:30:00'),
+  ('trace-pay-004', 'ACC-1004', 'RETAIL', TIMESTAMP(CURDATE(), '10:30:00'),
    'payments.raw', 1, 103, 'pay-key-4', '{"amount":90}', '{"amount":90}',
    3000, 3000, 'payments.processed', 2, 203,
    'IllegalStateException', 'Invalid payment state', 'stack...', 1, 0),
-  (DATE_SUB(CURDATE(), INTERVAL 1 event_date), 'trace-pay-005', 'ACC-1005', 'SMB',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '12:20:00'),
+  ('trace-pay-005', 'ACC-1005', 'SMB',
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '12:20:00'),
    'payments.raw', 1, 104, 'pay-key-5', '{"amount":110}', '{"amount":110}',
    5000, 5000, 'payments.processed', 2, 204,
    'TimeoutException', 'Downstream timeout', 'stack...', 0, 1);
 
 INSERT INTO loans_in_success (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -80,20 +77,19 @@ INSERT INTO loans_in_success (
   target_partition_id,
   target_offset
 ) VALUES
-  (CURDATE(), 'trace-loan-001', 'ACC-2001', 'RETAIL', TIMESTAMP(CURDATE(), '07:45:00'),
+  ('trace-loan-001', 'ACC-2001', 'RETAIL', TIMESTAMP(CURDATE(), '07:45:00'),
    'loans.raw', 3, 500, 'loan-key-1', '{"loanAmount":10000}', '{"loanAmount":10000,"status":"ok"}',
    8000, 3000, 5000, 'loans.processed', 4, 600),
-  (DATE_SUB(CURDATE(), INTERVAL 1 event_date), 'trace-loan-002', 'ACC-2002', 'SMB',
-   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 event_date), '15:10:00'),
+  ('trace-loan-002', 'ACC-2002', 'SMB',
+   TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '15:10:00'),
    'loans.raw', 3, 501, 'loan-key-2', '{"loanAmount":4500}', '{"loanAmount":4500,"status":"ok"}',
    9000, 3500, 5500, 'loans.processed', 4, 601);
 
 INSERT INTO loans_in_failure (
-  event_date,
   event_trace_id,
   account_number,
   customer_type,
-  event_date_time,
+  event_datetime,
   source_topic,
   source_partition_id,
   source_offset,
@@ -111,7 +107,8 @@ INSERT INTO loans_in_failure (
   retriable,
   retry_attempt
 ) VALUES
-  (CURDATE(), 'trace-loan-003', 'ACC-2003', 'RETAIL', TIMESTAMP(CURDATE(), '16:05:00'),
+  ('trace-loan-003', 'ACC-2003', 'RETAIL', TIMESTAMP(CURDATE(), '16:05:00'),
    'loans.raw', 3, 502, 'loan-key-3', '{"loanAmount":2500}', '{"loanAmount":2500}',
    4000, 4000, 'loans.processed', 4, 602,
    'ValidationException', 'Loan data invalid', 'stack...', 1, 0);
+

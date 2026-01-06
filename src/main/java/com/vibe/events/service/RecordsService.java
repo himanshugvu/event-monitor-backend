@@ -57,10 +57,9 @@ public class RecordsService {
     List<Map<String, Object>> rows =
         repository.loadSuccessRows(
             table,
-            range.startDay(),
-            range.endDay(),
             range.startTimestamp(),
             range.endTimestamp(),
+            range.endInclusive(),
             traceId,
             messageKey,
             accountNumber,
@@ -73,10 +72,9 @@ public class RecordsService {
     long total =
         repository.loadSuccessRowCount(
             table,
-            range.startDay(),
-            range.endDay(),
             range.startTimestamp(),
             range.endTimestamp(),
+            range.endInclusive(),
             traceId,
             messageKey,
             accountNumber,
@@ -130,10 +128,9 @@ public class RecordsService {
     List<Map<String, Object>> rows =
         repository.loadFailureRows(
             table,
-            range.startDay(),
-            range.endDay(),
             range.startTimestamp(),
             range.endTimestamp(),
+            range.endInclusive(),
             traceId,
             messageKey,
             accountNumber,
@@ -150,10 +147,9 @@ public class RecordsService {
     long total =
         repository.loadFailureRowCount(
             table,
-            range.startDay(),
-            range.endDay(),
             range.startTimestamp(),
             range.endTimestamp(),
+            range.endInclusive(),
             traceId,
             messageKey,
             accountNumber,
@@ -179,10 +175,19 @@ public class RecordsService {
     String table = registry.failureTable(eventKey);
     return repository.loadFailureExceptionTypes(
         table,
-        range.startDay(),
-        range.endDay(),
         range.startTimestamp(),
-        range.endTimestamp());
+        range.endTimestamp(),
+        range.endInclusive());
+  }
+
+  public Map<String, Object> loadSuccessRowDetail(String eventKey, long id) {
+    String table = registry.successTable(eventKey);
+    return repository.loadSuccessRowById(table, id);
+  }
+
+  public Map<String, Object> loadFailureRowDetail(String eventKey, long id) {
+    String table = registry.failureTable(eventKey);
+    return repository.loadFailureRowById(table, id);
   }
 
   private DateTimeRange resolveRange(
@@ -202,20 +207,18 @@ public class RecordsService {
     }
 
     LocalTime startTime = fromTime == null ? LocalTime.MIDNIGHT : fromTime;
-    LocalTime endTime = toTime == null ? LocalTime.of(23, 59, 59) : toTime;
     LocalDateTime startTimestamp = LocalDateTime.of(start, startTime);
-    LocalDateTime endTimestamp = LocalDateTime.of(end, endTime);
+    boolean endInclusive = toTime != null;
+    LocalDateTime endTimestamp =
+        endInclusive ? LocalDateTime.of(end, toTime) : end.plusDays(1).atStartOfDay();
     if (startTimestamp.isAfter(endTimestamp)) {
       throw new BadRequestException("fromTime must be <= toTime.");
     }
-    return new DateTimeRange(start, end, startTimestamp, endTimestamp);
+    return new DateTimeRange(startTimestamp, endTimestamp, endInclusive);
   }
 
   private record DateTimeRange(
-      LocalDate startDay,
-      LocalDate endDay,
-      LocalDateTime startTimestamp,
-      LocalDateTime endTimestamp) {}
+      LocalDateTime startTimestamp, LocalDateTime endTimestamp, boolean endInclusive) {}
 
   private int resolvePage(Integer page) {
     int resolved = page == null ? 0 : page;
