@@ -1,0 +1,12 @@
+# Maven
+target
+
+# Logs
+backend.out.log
+backend.err.log
+backend.log
+
+# Git/IDE
+.git
+.idea
+.vscode
