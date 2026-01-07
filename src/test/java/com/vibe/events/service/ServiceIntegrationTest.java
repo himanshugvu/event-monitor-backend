@@ -67,7 +67,21 @@ class ServiceIntegrationTest {
     LocalDate day = LocalDate.now();
     PagedRowsResponse response =
         recordsService.loadSuccessRows(
-            day, null, null, null, null, "payments.in", 0, 50, "pay-trace-2", null, null);
+            day,
+            null,
+            null,
+            null,
+            null,
+            "payments.in",
+            0,
+            50,
+            "pay-trace-2",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
 
     assertThat(response.total()).isEqualTo(1);
     assertThat(response.rows()).hasSize(1);
@@ -88,6 +102,10 @@ class ServiceIntegrationTest {
             "loans.in",
             0,
             50,
+            null,
+            null,
+            null,
+            null,
             null,
             null,
             null,
