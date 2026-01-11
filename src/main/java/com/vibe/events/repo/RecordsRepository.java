@@ -328,5 +328,87 @@ public class RecordsRepository {
         .optional()
         .orElse(null);
   }
+
+  public List<Map<String, Object>> loadFailureRowsByIds(String failureTable, List<Long> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return List.of();
+    }
+    String sql = "SELECT * FROM " + failureTable + " WHERE id IN (:ids)";
+    Map<String, Object> params = new HashMap<>();
+    params.put("ids", ids);
+    return jdbcClient.sql(sql).params(params).query(RowMapperUtil.dynamicRowMapper()).list();
+  }
+
+  public List<Map<String, Object>> loadFailureRowsForReplay(
+      String failureTable,
+      LocalDateTime startTimestamp,
+      LocalDateTime endTimestamp,
+      boolean endInclusive,
+      String traceId,
+      String messageKey,
+      String accountNumber,
+      Long latencyMin,
+      Long latencyMax,
+      Long receivedLatencyMin,
+      Long receivedLatencyMax,
+      String exceptionType,
+      Boolean retriable,
+      Integer retryAttemptMin,
+      Integer retryAttemptMax) {
+    StringBuilder sql = new StringBuilder("SELECT * FROM ").append(failureTable);
+    Map<String, Object> params = new HashMap<>();
+    sql.append(" WHERE event_datetime >= :startTs AND event_datetime ");
+    sql.append(endInclusive ? "<= :endTs" : "< :endTs");
+    params.put("startTs", startTimestamp);
+    params.put("endTs", endTimestamp);
+
+    if (traceId != null && !traceId.isBlank()) {
+      sql.append(" AND event_trace_id = :traceId");
+      params.put("traceId", traceId);
+    }
+    if (messageKey != null && !messageKey.isBlank()) {
+      sql.append(" AND message_key = :messageKey");
+      params.put("messageKey", messageKey);
+    }
+    if (accountNumber != null && !accountNumber.isBlank()) {
+      sql.append(" AND account_number = :accountNumber");
+      params.put("accountNumber", accountNumber);
+    }
+    if (latencyMin != null) {
+      sql.append(" AND latency_ms >= :latencyMin");
+      params.put("latencyMin", latencyMin);
+    }
+    if (latencyMax != null) {
+      sql.append(" AND latency_ms <= :latencyMax");
+      params.put("latencyMax", latencyMax);
+    }
+    if (receivedLatencyMin != null) {
+      sql.append(" AND latency_event_received_ms >= :receivedLatencyMin");
+      params.put("receivedLatencyMin", receivedLatencyMin);
+    }
+    if (receivedLatencyMax != null) {
+      sql.append(" AND latency_event_received_ms <= :receivedLatencyMax");
+      params.put("receivedLatencyMax", receivedLatencyMax);
+    }
+    if (exceptionType != null && !exceptionType.isBlank()) {
+      sql.append(" AND exception_type = :exceptionType");
+      params.put("exceptionType", exceptionType);
+    }
+    if (retriable != null) {
+      sql.append(" AND retriable = :retriable");
+      params.put("retriable", retriable ? 1 : 0);
+    }
+    if (retryAttemptMin != null) {
+      sql.append(" AND retry_attempt >= :retryAttemptMin");
+      params.put("retryAttemptMin", retryAttemptMin);
+    }
+    if (retryAttemptMax != null) {
+      sql.append(" AND retry_attempt <= :retryAttemptMax");
+      params.put("retryAttemptMax", retryAttemptMax);
+    }
+
+    sql.append(" ORDER BY event_datetime DESC, id DESC");
+    return jdbcClient.sql(sql.toString()).params(params).query(RowMapperUtil.dynamicRowMapper()).list();
+  }
 }
 

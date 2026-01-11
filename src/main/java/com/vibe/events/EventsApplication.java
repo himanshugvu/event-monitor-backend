@@ -13,7 +13,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableAsync
 @EnableScheduling
 @EnableCaching
-@EnableConfigurationProperties({AggregationProperties.class, EventRegistryProperties.class})
+@EnableConfigurationProperties({
+  AggregationProperties.class,
+  EventRegistryProperties.class
+})
 public class EventsApplication {
   public static void main(String[] args) {
     SpringApplication.run(EventsApplication.class, args);

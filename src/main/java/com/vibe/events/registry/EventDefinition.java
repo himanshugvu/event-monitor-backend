@@ -6,6 +6,7 @@ public class EventDefinition {
   private String category;
   private String successTable;
   private String failureTable;
+  private String replayUrl;
 
   public String getKey() {
     return key;
@@ -45,5 +46,13 @@ public class EventDefinition {
 
   public void setFailureTable(String failureTable) {
     this.failureTable = failureTable;
+  }
+
+  public String getReplayUrl() {
+    return replayUrl;
+  }
+
+  public void setReplayUrl(String replayUrl) {
+    this.replayUrl = replayUrl;
   }
 }

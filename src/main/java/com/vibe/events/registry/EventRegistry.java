@@ -24,6 +24,10 @@ public class EventRegistry {
         throw new IllegalStateException(
             "Event tables must be provided for key: " + definition.getKey());
       }
+      if (definition.getReplayUrl() == null || definition.getReplayUrl().isBlank()) {
+        throw new IllegalStateException(
+            "Replay URL must be provided for key: " + definition.getKey());
+      }
       if (map.containsKey(definition.getKey())) {
         throw new IllegalStateException("Duplicate event key: " + definition.getKey());
       }
@@ -50,5 +54,9 @@ public class EventRegistry {
 
   public String failureTable(String eventKey) {
     return getRequired(eventKey).getFailureTable();
+  }
+
+  public String replayUrl(String eventKey) {
+    return getRequired(eventKey).getReplayUrl();
   }
 }

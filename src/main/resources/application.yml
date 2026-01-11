@@ -23,31 +23,37 @@ events:
       category: Commerce / Payments
       successTable: payments_in_success
       failureTable: payments_in_failure
+      replayUrl: http://localhost:8080/api/v1/mock/replay
     - key: loans.in
       name: LoanDisbursed
       category: Lending / Core
       successTable: loans_in_success
       failureTable: loans_in_failure
+      replayUrl: http://localhost:8080/api/v1/mock/replay
     - key: cards.in
       name: CardActivated
       category: Cards / Lifecycle
       successTable: cards_in_success
       failureTable: cards_in_failure
+      replayUrl: http://localhost:8080/api/v1/mock/replay
     - key: accounts.in
       name: AccountOpened
       category: Accounts / Core
       successTable: accounts_in_success
       failureTable: accounts_in_failure
+      replayUrl: http://localhost:8080/api/v1/mock/replay
     - key: transfers.in
       generatedAt generatedAt generatedAt genegeneratedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt ratedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt generatedAt name: TransferCompleted
       category: Transfers / Payments
       successTable: transfers_in_success
       failureTable: transfers_in_failure
+      replayUrl: http://localhost:8080/api/v1/mock/replay
     - key: alerts.in
       name: AlertTriggered
       category: Monitoring / Alerts
       successTable: alerts_in_success
       failureTable: alerts_in_failure
+      replayUrl: http://localhost:8080/api/v1/mock/replay
 
 aggregation:
   cache:
