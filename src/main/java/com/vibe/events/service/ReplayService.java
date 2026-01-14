@@ -219,8 +219,22 @@ public class ReplayService {
     }
     ReplayExternalRequest request = buildExternalRequest(ids);
     try {
+      log.info(
+          "Replay request sent requestId={} url={} idsCount={}",
+          request.requestId(),
+          replayUrl,
+          ids.size());
+      if (log.isDebugEnabled()) {
+        log.debug("Replay request ids requestId={} ids={}", request.requestId(), ids);
+      }
       ReplayExternalResponse response = externalClient.replay(replayUrl, request);
-      return parseExternalResponse(ids, response);
+      ReplayResult result = parseExternalResponse(ids, response);
+      log.info(
+          "Replay response received requestId={} succeeded={} failed={}",
+          request.requestId(),
+          result.succeeded(),
+          result.failed());
+      return result;
     } catch (Exception ex) {
       log.warn("Replay external call failed for requestId={}", request.requestId(), ex);
       return new ReplayResult(0, ids.size(), new ArrayList<>(ids));
