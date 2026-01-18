@@ -7,6 +7,8 @@ public class EventDefinition {
   private String successTable;
   private String failureTable;
   private String replayUrl;
+  private String retentionCron;
+  private Integer retentionDays;
 
   public String getKey() {
     return key;
@@ -54,5 +56,21 @@ public class EventDefinition {
 
   public void setReplayUrl(String replayUrl) {
     this.replayUrl = replayUrl;
+  }
+
+  public String getRetentionCron() {
+    return retentionCron;
+  }
+
+  public void setRetentionCron(String retentionCron) {
+    this.retentionCron = retentionCron;
+  }
+
+  public Integer getRetentionDays() {
+    return retentionDays;
+  }
+
+  public void setRetentionDays(Integer retentionDays) {
+    this.retentionDays = retentionDays;
   }
 }

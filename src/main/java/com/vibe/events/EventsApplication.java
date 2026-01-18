@@ -1,6 +1,7 @@
 package com.vibe.events;
 
 import com.vibe.events.config.AggregationProperties;
+import com.vibe.events.config.HousekeepingProperties;
 import com.vibe.events.registry.EventRegistryProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,7 +16,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 @EnableConfigurationProperties({
   AggregationProperties.class,
-  EventRegistryProperties.class
+  EventRegistryProperties.class,
+  HousekeepingProperties.class
 })
 public class EventsApplication {
   public static void main(String[] args) {

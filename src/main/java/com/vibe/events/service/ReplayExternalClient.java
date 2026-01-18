@@ -18,7 +18,13 @@ public class ReplayExternalClient {
   public ReplayExternalResponse replay(String replayUrl, ReplayExternalRequest request) {
     ReplayExternalRequest resolvedRequest =
         request == null
-            ? new ReplayExternalRequest(List.of(), UUID.randomUUID().toString(), null, null, null)
+            ? new ReplayExternalRequest(
+                UUID.randomUUID().toString(),
+                List.of(),
+                UUID.randomUUID().toString(),
+                null,
+                null,
+                null)
             : request;
     return restClient
         .post()
