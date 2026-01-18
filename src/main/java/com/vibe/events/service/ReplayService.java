@@ -199,8 +199,9 @@ public class ReplayService {
     failedIds.addAll(result.failedIds());
     int failed = failedIds.size();
     int succeeded = extracted.ids().size() - result.failedIds().size();
+    int queued = Math.max(0, extracted.ids().size() - succeeded - failed);
     String status = resolveJobStatus(extracted.ids().size(), succeeded, failed);
-    updateReplayJob(jobId, (int) total, status, LocalDateTime.now());
+    updateReplayJob(jobId, (int) total, succeeded, failed, queued, status, LocalDateTime.now());
     return new ReplayJobResponse(
         jobId,
         status,
@@ -259,7 +260,7 @@ public class ReplayService {
         auditRepository.loadReplayAuditItems(
             normalizedEvent, normalizedStatus, normalizedRequestedBy, normalizedSearch, resolvedSize, offset);
     ReplayAuditRepository.ReplayAuditStatsRow statsRow =
-        auditRepository.loadReplayAuditStats(
+        auditRepository.loadReplayJobStats(
             normalizedEvent, normalizedStatus, normalizedRequestedBy, normalizedSearch);
     List<String> operators = auditRepository.loadReplayAuditOperators();
     List<String> eventKeys = auditRepository.loadReplayAuditEventKeys();
@@ -406,7 +407,8 @@ public class ReplayService {
     int failed = failedIds.size();
     int succeeded = ids.size() - failed;
     String status = resolveJobStatus(ids.size(), succeeded, failed);
-    updateReplayJob(jobId, ids.size(), status, LocalDateTime.now());
+    int queued = Math.max(0, ids.size() - succeeded - failed);
+    updateReplayJob(jobId, ids.size(), succeeded, failed, queued, status, LocalDateTime.now());
     return new ReplayResponse(jobId, ids.size(), succeeded, failed, failedIds);
   }
 
@@ -490,8 +492,15 @@ public class ReplayService {
   }
 
   private void updateReplayJob(
-      String jobId, int totalRequested, String status, LocalDateTime completedAt) {
-    auditRepository.updateJobSummary(new ReplayJobUpdate(jobId, totalRequested, status, completedAt));
+      String jobId,
+      int totalRequested,
+      int succeeded,
+      int failed,
+      int queued,
+      String status,
+      LocalDateTime completedAt) {
+    auditRepository.updateJobSummary(
+        new ReplayJobUpdate(jobId, totalRequested, status, succeeded, failed, queued, completedAt));
   }
 
   private void insertReplayItems(

@@ -157,6 +157,9 @@ public class ReplayAuditRepository {
         UPDATE replay_jobs
         SET total_requested = :totalRequested,
             status = :status,
+            succeeded_count = :succeededCount,
+            failed_count = :failedCount,
+            queued_count = :queuedCount,
             completed_at = :completedAt
         WHERE id = :id
         """;
@@ -167,6 +170,9 @@ public class ReplayAuditRepository {
                 "id", update.id(),
                 "totalRequested", update.totalRequested(),
                 "status", update.status(),
+                "succeededCount", update.succeededCount(),
+                "failedCount", update.failedCount(),
+                "queuedCount", update.queuedCount(),
                 "completedAt", update.completedAt()))
         .update();
   }
@@ -190,78 +196,44 @@ public class ReplayAuditRepository {
                j.reason,
                j.created_at,
                j.completed_at,
-               SUM(CASE WHEN i.status = 'REPLAYED' THEN 1 ELSE 0 END) AS succeeded,
-               SUM(CASE WHEN i.status = 'FAILED' THEN 1 ELSE 0 END) AS failed,
-               SUM(CASE WHEN i.status = 'QUEUED' THEN 1 ELSE 0 END) AS queued
+               j.succeeded_count,
+               j.failed_count,
+               j.queued_count
         FROM replay_jobs j
-        LEFT JOIN replay_items i ON i.job_id = j.id
         WHERE 1=1
         """);
     Map<String, Object> params = new java.util.HashMap<>();
-    if (eventKey != null && !eventKey.isBlank()) {
-      sql.append(" AND j.event_key = :eventKey");
-      params.put("eventKey", eventKey);
-    }
-    if (itemStatus != null && !itemStatus.isBlank()) {
-      sql.append(
-          """
-           AND EXISTS (
-             SELECT 1
-             FROM replay_items si
-             WHERE si.job_id = j.id
-               AND si.status = :itemStatus
-           )
-          """);
-      params.put("itemStatus", itemStatus);
-    }
-    if (requestedBy != null && !requestedBy.isBlank()) {
-      sql.append(" AND j.requested_by = :requestedBy");
-      params.put("requestedBy", requestedBy);
-    }
-    if (search != null && !search.isBlank()) {
-      sql.append(
-          """
-           AND (
-             j.id LIKE :search
-             OR EXISTS (
-               SELECT 1
-               FROM replay_items si
-               WHERE si.job_id = j.id
-                 AND (CAST(si.record_id AS CHAR) LIKE :search OR si.trace_id LIKE :search)
-             )
-           )
-          """);
-      params.put("search", "%" + search + "%");
-    }
+    appendReplayJobFilters(sql, params, eventKey, itemStatus, requestedBy, search);
     sql.append(
         """
-        GROUP BY j.id
         ORDER BY j.created_at DESC
         LIMIT :limit OFFSET :offset
         """);
     params.put("limit", limit);
     params.put("offset", offset);
-    return jdbcClient
-        .sql(sql.toString())
-        .params(params)
-        .query(
-            (rs, rowNum) ->
-                new ReplayJobSummaryRow(
-                    rs.getString("id"),
-                    rs.getString("event_key"),
-                    rs.getString("selection_type"),
-                    rs.getInt("total_requested"),
-                    rs.getString("status"),
-                    rs.getString("requested_by"),
-                    rs.getString("reason"),
-                    rs.getTimestamp("created_at").toLocalDateTime(),
-                    rs.getTimestamp("completed_at") == null
-                        ? null
-                        : rs.getTimestamp("completed_at").toLocalDateTime(),
-                    rs.getLong("succeeded"),
-                    rs.getLong("failed"),
-                    rs.getLong("queued")))
-        .list();
+    List<ReplayJobSummaryRow> jobs =
+        jdbcClient
+            .sql(sql.toString())
+            .params(params)
+            .query(
+                (rs, rowNum) ->
+                    new ReplayJobSummaryRow(
+                        rs.getString("id"),
+                        rs.getString("event_key"),
+                        rs.getString("selection_type"),
+                        rs.getInt("total_requested"),
+                        rs.getString("status"),
+                        rs.getString("requested_by"),
+                        rs.getString("reason"),
+                        rs.getTimestamp("created_at").toLocalDateTime(),
+                        rs.getTimestamp("completed_at") == null
+                            ? null
+                            : rs.getTimestamp("completed_at").toLocalDateTime(),
+                        rs.getLong("succeeded_count"),
+                        rs.getLong("failed_count"),
+                        rs.getLong("queued_count")))
+            .list();
+    return jobs;
   }
 
   public long loadReplayJobCount(
@@ -274,42 +246,40 @@ public class ReplayAuditRepository {
         WHERE 1=1
         """);
     Map<String, Object> params = new java.util.HashMap<>();
+    appendReplayJobFilters(sql, params, eventKey, itemStatus, requestedBy, search);
+    return jdbcClient.sql(sql.toString()).params(params).query(Long.class).single();
+  }
+
+  private void appendReplayJobFilters(
+      StringBuilder sql,
+      Map<String, Object> params,
+      String eventKey,
+      String itemStatus,
+      String requestedBy,
+      String search) {
     if (eventKey != null && !eventKey.isBlank()) {
       sql.append(" AND j.event_key = :eventKey");
       params.put("eventKey", eventKey);
     }
     if (itemStatus != null && !itemStatus.isBlank()) {
-      sql.append(
-          """
-           AND EXISTS (
-             SELECT 1
-             FROM replay_items si
-             WHERE si.job_id = j.id
-               AND si.status = :itemStatus
-           )
-          """);
-      params.put("itemStatus", itemStatus);
+      String normalized = itemStatus.trim().toUpperCase();
+      switch (normalized) {
+        case "REPLAYED" -> sql.append(" AND j.succeeded_count > 0");
+        case "FAILED" -> sql.append(" AND j.failed_count > 0");
+        case "QUEUED" -> sql.append(" AND j.queued_count > 0");
+        default -> {
+          // Ignore unknown status filters.
+        }
+      }
     }
     if (requestedBy != null && !requestedBy.isBlank()) {
       sql.append(" AND j.requested_by = :requestedBy");
       params.put("requestedBy", requestedBy);
     }
     if (search != null && !search.isBlank()) {
-      sql.append(
-          """
-           AND (
-             j.id LIKE :search
-             OR EXISTS (
-               SELECT 1
-               FROM replay_items si
-               WHERE si.job_id = j.id
-                 AND (CAST(si.record_id AS CHAR) LIKE :search OR si.trace_id LIKE :search)
-             )
-           )
-          """);
-      params.put("search", "%" + search + "%");
+      sql.append(" AND j.id LIKE :search");
+      params.put("search", "%" + search.trim() + "%");
     }
-    return jdbcClient.sql(sql.toString()).params(params).query(Long.class).single();
   }
 
   public List<ReplayJobItemRow> loadReplayJobItems(String jobId) {
@@ -485,7 +455,7 @@ public class ReplayAuditRepository {
     String sql =
         """
         SELECT DISTINCT event_key
-        FROM replay_items
+        FROM replay_jobs
         WHERE event_key IS NOT NULL
           AND event_key <> ''
         ORDER BY event_key
@@ -566,7 +536,13 @@ public class ReplayAuditRepository {
       LocalDateTime updatedAt) {}
 
   public record ReplayJobUpdate(
-      String id, int totalRequested, String status, LocalDateTime completedAt) {}
+      String id,
+      int totalRequested,
+      String status,
+      int succeededCount,
+      int failedCount,
+      int queuedCount,
+      LocalDateTime completedAt) {}
 
   public record ReplayJobSummaryRow(
       String id,
@@ -581,6 +557,47 @@ public class ReplayAuditRepository {
       long succeeded,
       long failed,
       long queued) {}
+
+  public ReplayAuditStatsRow loadReplayJobStats(
+      String eventKey, String itemStatus, String requestedBy, String search) {
+    StringBuilder sql =
+        new StringBuilder(
+            """
+        SELECT COALESCE(SUM(j.total_requested), 0) AS total,
+               COALESCE(SUM(j.succeeded_count), 0) AS replayed,
+               COALESCE(SUM(j.failed_count), 0) AS failed,
+               COALESCE(SUM(j.queued_count), 0) AS queued,
+               AVG(
+                 TIMESTAMPDIFF(
+                   MICROSECOND,
+                   j.created_at,
+                   COALESCE(j.completed_at, j.created_at)
+                 ) / 1000
+               ) AS avg_duration_ms,
+               MAX(COALESCE(j.completed_at, j.created_at)) AS latest_at
+        FROM replay_jobs j
+        WHERE 1=1
+        """);
+    Map<String, Object> params = new java.util.HashMap<>();
+    appendReplayJobFilters(sql, params, eventKey, itemStatus, requestedBy, search);
+    return jdbcClient
+        .sql(sql.toString())
+        .params(params)
+        .query(
+            (rs, rowNum) -> {
+              Double avgDuration =
+                  rs.getObject("avg_duration_ms") == null ? null : rs.getDouble("avg_duration_ms");
+              java.sql.Timestamp latestAt = rs.getTimestamp("latest_at");
+              return new ReplayAuditStatsRow(
+                  rs.getLong("total"),
+                  rs.getLong("replayed"),
+                  rs.getLong("failed"),
+                  rs.getLong("queued"),
+                  avgDuration,
+                  latestAt == null ? null : latestAt.toLocalDateTime());
+            })
+        .single();
+  }
 
   public record ReplayJobItemRow(
       long recordId,
