@@ -13,10 +13,13 @@ public class RecordsRepository {
   private final JdbcClient jdbcClient;
   private static final String SUCCESS_LIST_COLUMNS =
       "id, event_datetime, event_trace_id, account_number, customer_type, "
-          + "source_topic, target_topic, message_key, latency_ms";
+          + "source_partition_id, target_partition_id, source_offset, target_offset, "
+          + "latency_event_received_ms, latency_ms";
   private static final String FAILURE_LIST_COLUMNS =
       "id, event_datetime, event_trace_id, account_number, exception_type, "
-          + "exception_message, retriable, retry_attempt, message_key, latency_ms";
+          + "exception_message, retriable, retry_attempt, "
+          + "source_partition_id, source_offset, "
+          + "latency_event_received_ms, latency_ms";
 
   public RecordsRepository(JdbcClient jdbcClient) {
     this.jdbcClient = jdbcClient;
