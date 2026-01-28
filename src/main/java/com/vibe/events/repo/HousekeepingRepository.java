@@ -218,6 +218,110 @@ public class HousekeepingRepository {
         .orElse(null);
   }
 
+  public List<HousekeepingDailyRow> loadDailyRowsForDate(String jobType, LocalDate runDate) {
+    String sql =
+        """
+        SELECT job_type,
+               event_key,
+               run_date,
+               retention_days,
+               cutoff_date,
+               snapshot_at,
+               eligible_success,
+               eligible_failure,
+               eligible_total,
+               last_status,
+               last_run_id,
+               last_attempt,
+               last_started_at,
+               last_completed_at,
+               last_error
+        FROM housekeeping_daily
+        WHERE job_type = :jobType
+          AND run_date = :runDate
+        ORDER BY event_key
+        """;
+    return jdbcClient
+        .sql(sql)
+        .params(Map.of("jobType", jobType, "runDate", runDate))
+        .query(
+            (rs, rowNum) ->
+                new HousekeepingDailyRow(
+                    rs.getString("job_type"),
+                    rs.getString("event_key"),
+                    rs.getDate("run_date").toLocalDate(),
+                    rs.getInt("retention_days"),
+                    rs.getDate("cutoff_date").toLocalDate(),
+                    rs.getTimestamp("snapshot_at").toLocalDateTime(),
+                    rs.getLong("eligible_success"),
+                    rs.getLong("eligible_failure"),
+                    rs.getLong("eligible_total"),
+                    rs.getString("last_status"),
+                    rs.getString("last_run_id"),
+                    rs.getInt("last_attempt"),
+                    rs.getTimestamp("last_started_at") == null
+                        ? null
+                        : rs.getTimestamp("last_started_at").toLocalDateTime(),
+                    rs.getTimestamp("last_completed_at") == null
+                        ? null
+                        : rs.getTimestamp("last_completed_at").toLocalDateTime(),
+                    rs.getString("last_error")))
+        .list();
+  }
+
+  public HousekeepingDailyRow loadLatestDaily(String jobType, String eventKey) {
+    String sql =
+        """
+        SELECT job_type,
+               event_key,
+               run_date,
+               retention_days,
+               cutoff_date,
+               snapshot_at,
+               eligible_success,
+               eligible_failure,
+               eligible_total,
+               last_status,
+               last_run_id,
+               last_attempt,
+               last_started_at,
+               last_completed_at,
+               last_error
+        FROM housekeeping_daily
+        WHERE job_type = :jobType
+          AND event_key = :eventKey
+        ORDER BY run_date DESC
+        LIMIT 1
+        """;
+    return jdbcClient
+        .sql(sql)
+        .params(Map.of("jobType", jobType, "eventKey", eventKey))
+        .query(
+            (rs, rowNum) ->
+                new HousekeepingDailyRow(
+                    rs.getString("job_type"),
+                    rs.getString("event_key"),
+                    rs.getDate("run_date").toLocalDate(),
+                    rs.getInt("retention_days"),
+                    rs.getDate("cutoff_date").toLocalDate(),
+                    rs.getTimestamp("snapshot_at").toLocalDateTime(),
+                    rs.getLong("eligible_success"),
+                    rs.getLong("eligible_failure"),
+                    rs.getLong("eligible_total"),
+                    rs.getString("last_status"),
+                    rs.getString("last_run_id"),
+                    rs.getInt("last_attempt"),
+                    rs.getTimestamp("last_started_at") == null
+                        ? null
+                        : rs.getTimestamp("last_started_at").toLocalDateTime(),
+                    rs.getTimestamp("last_completed_at") == null
+                        ? null
+                        : rs.getTimestamp("last_completed_at").toLocalDateTime(),
+                    rs.getString("last_error")))
+        .optional()
+        .orElse(null);
+  }
+
   public void updateDailyStatus(HousekeepingDailyUpdate update) {
     String sql =
         """

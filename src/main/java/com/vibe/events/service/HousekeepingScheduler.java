@@ -4,6 +4,8 @@ import com.vibe.events.config.HousekeepingProperties;
 import com.vibe.events.registry.EventDefinition;
 import com.vibe.events.registry.EventRegistry;
 import jakarta.annotation.PostConstruct;
+import java.time.Duration;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.TaskScheduler;
@@ -40,6 +42,8 @@ public class HousekeepingScheduler {
     scheduleEventJobs();
     scheduleAuditJob(JOB_TYPE_REPLAY_AUDIT, properties.getReplayAuditCron());
     scheduleAuditJob(JOB_TYPE_HOUSEKEEPING_AUDIT, properties.getHousekeepingAuditCron());
+    schedulePreviewCache(properties.getPreviewCron());
+    warmPreviewCacheOnStartup();
   }
 
   private void scheduleEventJobs() {
@@ -81,6 +85,24 @@ public class HousekeepingScheduler {
     } catch (Exception ex) {
       log.warn("Scheduled {} job failed", jobType, ex);
     }
+  }
+
+  private void schedulePreviewCache(String cron) {
+    if (cron == null || cron.isBlank()) {
+      log.warn("No cron configured for preview cache");
+      return;
+    }
+    scheduler.schedule(
+        housekeepingService::refreshPreviewCache,
+        new CronTrigger(cron, java.util.TimeZone.getDefault()));
+    log.info("Scheduled preview cache refresh with cron {}", cron);
+  }
+
+  private void warmPreviewCacheOnStartup() {
+    scheduler.schedule(
+        housekeepingService::refreshPreviewCache,
+        Instant.now().plus(Duration.ofSeconds(2)));
+    log.info("Scheduled preview cache warmup on startup");
   }
 
   private String pickCron(String eventCron, String defaultCron) {

@@ -46,10 +46,11 @@ public class HousekeepingController {
   @GetMapping("/preview")
   public HousekeepingPreviewResponse preview(
       @RequestParam(name = "jobType", required = false) String jobType,
-      @RequestParam(name = "eventKey", required = false) String eventKey) {
+      @RequestParam(name = "eventKey", required = false) String eventKey,
+      @RequestParam(name = "refresh", defaultValue = "false") boolean refresh) {
     String normalizedJob = normalizeJobType(jobType);
     String normalizedEvent = normalizeEventKey(normalizedJob, eventKey, true);
-    return service.preview(normalizedJob, normalizedEvent);
+    return service.preview(normalizedJob, normalizedEvent, refresh);
   }
 
   @GetMapping("/status")

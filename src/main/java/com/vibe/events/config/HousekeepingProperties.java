@@ -5,9 +5,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "housekeeping")
 public class HousekeepingProperties {
   private boolean enabled = true;
-  private String cron = "0 15 2 * * *";
-  private String replayAuditCron = "0 25 2 * * *";
-  private String housekeepingAuditCron = "0 35 2 * * *";
+  private String cron = "0 30 23 * * *";
+  private String replayAuditCron = "0 40 23 * * *";
+  private String housekeepingAuditCron = "0 50 23 * * *";
+  private String previewCron = "0 55 23 * * *";
   private int retentionDays = 7;
   private int batchSize = 10000;
   private int schedulerPoolSize = 4;
@@ -42,6 +43,14 @@ public class HousekeepingProperties {
 
   public void setHousekeepingAuditCron(String housekeepingAuditCron) {
     this.housekeepingAuditCron = housekeepingAuditCron;
+  }
+
+  public String getPreviewCron() {
+    return previewCron;
+  }
+
+  public void setPreviewCron(String previewCron) {
+    this.previewCron = previewCron;
   }
 
   public int getRetentionDays() {

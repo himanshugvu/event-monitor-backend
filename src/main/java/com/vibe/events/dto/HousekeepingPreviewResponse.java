@@ -11,4 +11,5 @@ public record HousekeepingPreviewResponse(
     long deletedSuccess,
     long deletedFailure,
     long deletedTotal,
+    LocalDateTime nextRunAt,
     List<HousekeepingPreviewEvent> events) {}

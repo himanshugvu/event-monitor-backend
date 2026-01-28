@@ -80,9 +80,10 @@ aggregation:
 
 housekeeping:
   enabled: true
-  cron: "0 30 2 * * *"
-  replayAuditCron: "0 35 2 * * *"
-  housekeepingAuditCron: "0 40 2 * * *"
+  cron: "0 30 23 * * *"
+  replayAuditCron: "0 40 23 * * *"
+  housekeepingAuditCron: "0 50 23 * * *"
+  previewCron: "0 55 23 * * *"
   retentionDays: 7
   batchSize: 10000
   schedulerPoolSize: 6

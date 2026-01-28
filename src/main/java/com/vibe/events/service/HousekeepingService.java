@@ -26,11 +26,14 @@ import com.vibe.events.repo.HousekeepingRepository.HousekeepingRunUpdate;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -220,6 +223,7 @@ public class HousekeepingService {
               start,
               completedAt,
               null));
+      refreshSnapshotSafely(jobType, snapshot.eventKey(), runDate);
       return new HousekeepingRunResponse(
           id,
           jobType,
@@ -262,15 +266,34 @@ public class HousekeepingService {
               start,
               completedAt,
               ex.getMessage()));
+      refreshSnapshotSafely(jobType, snapshot.eventKey(), runDate);
       throw ex;
     }
   }
 
-  public HousekeepingPreviewResponse preview(String jobType, String eventKey) {
+  public HousekeepingPreviewResponse preview(String jobType, String eventKey, boolean refresh) {
+    LocalDate runDate = LocalDate.now();
+    if (!refresh) {
+      if (JOB_TYPE_RETENTION.equals(jobType) && isAllEvents(eventKey)) {
+        HousekeepingPreviewResponse cached = previewAllRetentionCached(runDate);
+        if (cached != null) {
+          return cached;
+        }
+      } else {
+        HousekeepingDailyRow daily = repository.loadDaily(jobType, eventKey, runDate);
+        if (daily != null && daily.snapshotAt() != null) {
+          return previewFromDaily(daily, resolveNextRunAt(jobType, eventKey));
+        }
+        HousekeepingDailyRow latest = repository.loadLatestDaily(jobType, eventKey);
+        if (latest != null && latest.snapshotAt() != null) {
+          return previewFromDaily(latest, resolveNextRunAt(jobType, eventKey));
+        }
+      }
+    }
     if (JOB_TYPE_RETENTION.equals(jobType) && isAllEvents(eventKey)) {
       return previewAllRetention();
     }
-    HousekeepingSnapshot snapshot = refreshSnapshot(jobType, eventKey, LocalDate.now());
+    HousekeepingSnapshot snapshot = refreshSnapshot(jobType, eventKey, runDate);
     return new HousekeepingPreviewResponse(
         snapshot.cutoffDate(),
         snapshot.retentionDays(),
@@ -278,7 +301,23 @@ public class HousekeepingService {
         snapshot.eligibleSuccess(),
         snapshot.eligibleFailure(),
         snapshot.eligibleTotal(),
+        resolveNextRunAt(jobType, eventKey),
         snapshot.events());
+  }
+
+  public void refreshPreviewCache() {
+    LocalDate today = LocalDate.now();
+    LocalDate tomorrow = today.plusDays(1);
+    refreshPreviewCacheForDate(today);
+    refreshPreviewCacheForDate(tomorrow);
+  }
+
+  private void refreshPreviewCacheForDate(LocalDate runDate) {
+    for (EventDefinition definition : registry.all()) {
+      refreshSnapshotSafely(JOB_TYPE_RETENTION, definition.getKey(), runDate);
+    }
+    refreshSnapshotSafely(JOB_TYPE_REPLAY_AUDIT, EVENT_KEY_AUDIT, runDate);
+    refreshSnapshotSafely(JOB_TYPE_HOUSEKEEPING_AUDIT, EVENT_KEY_AUDIT, runDate);
   }
 
   public HousekeepingStatusResponse status(String jobType, String eventKey, LocalDate date) {
@@ -492,6 +531,7 @@ public class HousekeepingService {
     int retentionDays = properties.getRetentionDays();
     LocalDate cutoffDate = LocalDate.now().minusDays(retentionDays);
     LocalDateTime cutoffDateTime = cutoffDate.atStartOfDay();
+    ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
     List<HousekeepingPreviewEvent> events = new ArrayList<>();
     long totalSuccess = 0;
     long totalFailure = 0;
@@ -499,10 +539,13 @@ public class HousekeepingService {
       long success = repository.countOldRows(definition.getSuccessTable(), cutoffDateTime);
       long failure = repository.countOldRows(definition.getFailureTable(), cutoffDateTime);
       long total = success + failure;
-      events.add(new HousekeepingPreviewEvent(definition.getKey(), success, failure, total));
+      LocalDateTime nextRunAt =
+          nextRunAt(definition.getRetentionCron(), properties.getCron(), now);
+      events.add(new HousekeepingPreviewEvent(definition.getKey(), success, failure, total, nextRunAt));
       totalSuccess += success;
       totalFailure += failure;
     }
+    LocalDateTime nextRunAt = resolveNextRunAt(JOB_TYPE_RETENTION, EVENT_KEY_ALL);
     return new HousekeepingPreviewResponse(
         cutoffDate,
         retentionDays,
@@ -510,7 +553,84 @@ public class HousekeepingService {
         totalSuccess,
         totalFailure,
         totalSuccess + totalFailure,
+        nextRunAt,
         events);
+  }
+
+  private HousekeepingPreviewResponse previewAllRetentionCached(LocalDate runDate) {
+    List<HousekeepingDailyRow> rows = repository.loadDailyRowsForDate(JOB_TYPE_RETENTION, runDate);
+    if (rows.isEmpty()) {
+      return null;
+    }
+    java.util.Map<String, HousekeepingDailyRow> byEvent = new java.util.HashMap<>();
+    for (HousekeepingDailyRow row : rows) {
+      byEvent.put(row.eventKey(), row);
+    }
+    LocalDateTime snapshotAt = null;
+    int retentionDays = properties.getRetentionDays();
+    LocalDate cutoffDate = runDate.minusDays(retentionDays);
+    List<HousekeepingPreviewEvent> events = new ArrayList<>();
+    long totalSuccess = 0;
+    long totalFailure = 0;
+    ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
+    for (EventDefinition definition : registry.all()) {
+      HousekeepingDailyRow row = byEvent.get(definition.getKey());
+      if (row == null) {
+        row = repository.loadLatestDaily(JOB_TYPE_RETENTION, definition.getKey());
+      }
+      if (row == null || row.snapshotAt() == null) {
+        return null;
+      }
+      if (snapshotAt == null || row.snapshotAt().isAfter(snapshotAt)) {
+        snapshotAt = row.snapshotAt();
+      }
+      long success = row.eligibleSuccess();
+      long failure = row.eligibleFailure();
+      long total = row.eligibleTotal();
+      LocalDateTime nextRunAt = nextRunAt(definition.getRetentionCron(), properties.getCron(), now);
+      events.add(new HousekeepingPreviewEvent(definition.getKey(), success, failure, total, nextRunAt));
+      totalSuccess += success;
+      totalFailure += failure;
+    }
+    LocalDateTime nextRunAt = resolveNextRunAt(JOB_TYPE_RETENTION, EVENT_KEY_ALL);
+    return new HousekeepingPreviewResponse(
+        cutoffDate,
+        retentionDays,
+        snapshotAt,
+        totalSuccess,
+        totalFailure,
+        totalSuccess + totalFailure,
+        nextRunAt,
+        events);
+  }
+
+  private HousekeepingPreviewResponse previewFromDaily(
+      HousekeepingDailyRow daily, LocalDateTime nextRunAt) {
+    List<HousekeepingPreviewEvent> events = new ArrayList<>();
+    events.add(
+        new HousekeepingPreviewEvent(
+            daily.eventKey(),
+            daily.eligibleSuccess(),
+            daily.eligibleFailure(),
+            daily.eligibleTotal(),
+            nextRunAt));
+    return new HousekeepingPreviewResponse(
+        daily.cutoffDate(),
+        daily.retentionDays(),
+        daily.snapshotAt(),
+        daily.eligibleSuccess(),
+        daily.eligibleFailure(),
+        daily.eligibleTotal(),
+        nextRunAt,
+        events);
+  }
+
+  private void refreshSnapshotSafely(String jobType, String eventKey, LocalDate runDate) {
+    try {
+      refreshSnapshot(jobType, eventKey, runDate);
+    } catch (Exception ex) {
+      log.warn("Failed to refresh snapshot for {} {} {}", jobType, eventKey, runDate, ex);
+    }
   }
 
   private HousekeepingStatusResponse statusAllRetention(LocalDate runDate) {
@@ -589,28 +709,29 @@ public class HousekeepingService {
     List<HousekeepingPreviewEvent> events = new ArrayList<>();
     long totalSuccess = 0;
     long totalFailure = 0;
+    LocalDateTime nextRunAt = resolveNextRunAt(jobType, eventKey);
     if (JOB_TYPE_RETENTION.equals(jobType)) {
       EventDefinition definition = registry.getRequired(eventKey);
       long success = repository.countOldRows(definition.getSuccessTable(), cutoffDateTime);
       long failure = repository.countOldRows(definition.getFailureTable(), cutoffDateTime);
       long total = success + failure;
-      events.add(new HousekeepingPreviewEvent(definition.getKey(), success, failure, total));
+      events.add(new HousekeepingPreviewEvent(definition.getKey(), success, failure, total, nextRunAt));
       totalSuccess = success;
       totalFailure = failure;
     } else if (JOB_TYPE_REPLAY_AUDIT.equals(jobType)) {
       long jobs = repository.countReplayJobs(cutoffDate);
       long items = repository.countReplayItems(cutoffDate);
-      events.add(new HousekeepingPreviewEvent("replay_jobs", jobs, 0, jobs));
-      events.add(new HousekeepingPreviewEvent("replay_items", items, 0, items));
+      events.add(new HousekeepingPreviewEvent("replay_jobs", jobs, 0, jobs, nextRunAt));
+      events.add(new HousekeepingPreviewEvent("replay_items", items, 0, items, nextRunAt));
       totalSuccess = jobs;
       totalFailure = items;
     } else if (JOB_TYPE_HOUSEKEEPING_AUDIT.equals(jobType)) {
       long runs = repository.countHousekeepingRuns(cutoffDate);
       long items = repository.countHousekeepingRunItems(cutoffDate);
       long daily = repository.countHousekeepingDaily(cutoffDate);
-      events.add(new HousekeepingPreviewEvent("housekeeping_runs", runs, 0, runs));
-      events.add(new HousekeepingPreviewEvent("housekeeping_run_items", items, 0, items));
-      events.add(new HousekeepingPreviewEvent("housekeeping_daily", daily, 0, daily));
+      events.add(new HousekeepingPreviewEvent("housekeeping_runs", runs, 0, runs, nextRunAt));
+      events.add(new HousekeepingPreviewEvent("housekeeping_run_items", items, 0, items, nextRunAt));
+      events.add(new HousekeepingPreviewEvent("housekeeping_daily", daily, 0, daily, nextRunAt));
       totalSuccess = runs + daily;
       totalFailure = items;
     }
@@ -642,6 +763,47 @@ public class HousekeepingService {
 
   private boolean isAllEvents(String eventKey) {
     return eventKey == null || eventKey.isBlank() || EVENT_KEY_ALL.equalsIgnoreCase(eventKey);
+  }
+
+  private LocalDateTime resolveNextRunAt(String jobType, String eventKey) {
+    ZonedDateTime now = ZonedDateTime.now(ZoneId.systemDefault());
+    if (JOB_TYPE_RETENTION.equals(jobType)) {
+      if (isAllEvents(eventKey)) {
+        LocalDateTime earliest = null;
+        for (EventDefinition definition : registry.all()) {
+          LocalDateTime next = nextRunAt(definition.getRetentionCron(), properties.getCron(), now);
+          if (next == null) {
+            continue;
+          }
+          if (earliest == null || next.isBefore(earliest)) {
+            earliest = next;
+          }
+        }
+        if (earliest != null) {
+          return earliest;
+        }
+        return nextRunAt(null, properties.getCron(), now);
+      }
+      EventDefinition definition = registry.getRequired(eventKey);
+      return nextRunAt(definition.getRetentionCron(), properties.getCron(), now);
+    }
+    if (JOB_TYPE_REPLAY_AUDIT.equals(jobType)) {
+      return nextRunAt(null, properties.getReplayAuditCron(), now);
+    }
+    if (JOB_TYPE_HOUSEKEEPING_AUDIT.equals(jobType)) {
+      return nextRunAt(null, properties.getHousekeepingAuditCron(), now);
+    }
+    return null;
+  }
+
+  private LocalDateTime nextRunAt(String preferredCron, String fallbackCron, ZonedDateTime now) {
+    String cron = preferredCron == null || preferredCron.isBlank() ? fallbackCron : preferredCron;
+    if (cron == null || cron.isBlank()) {
+      return null;
+    }
+    CronExpression expression = CronExpression.parse(cron);
+    ZonedDateTime next = expression.next(now);
+    return next == null ? null : next.toLocalDateTime();
   }
 
   private HousekeepingRunResponse loadLatestRunResponse(
